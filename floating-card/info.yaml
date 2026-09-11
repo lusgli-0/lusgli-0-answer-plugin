@@ -1,0 +1,9 @@
+# 悬浮卡插件元信息。
+# PluginKit 用 slug_name 对上 allPlugins.floating_card；type=sidebar 只是前端分类，
+# SideNav 写死只渲染 quick_links，所以本插件不会出现在左栏，必须靠 index.ts 自挂载。
+# version / author / link 给后台插件列表展示，改名上线时一起改（不要改 slug_name）。
+slug_name: floating_card
+type: sidebar
+version: 0.1.0
+author: lusgli-0
+link: https://github.com/lusgli-0/lusgli-0-answer-plugin

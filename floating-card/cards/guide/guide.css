@@ -1,0 +1,267 @@
+/*
+ * 赛博紫「社区公告」面板。改完保存，刷新前台即可。
+ *
+ * 怎么改常见外观：
+ *  - 角落光晕颜色：.ans-guide-glow--1 / --2 的 radial-gradient
+ *  - 绿点大小和颜色：.ans-guide-dot（数量在 guide.js）
+ *  - 大光斑：.ans-guide-orb
+ * 粒子要鼠标移到面板上才出现。
+ *
+ * 设计源自 https://uiverse.io/00Kubi/cowardly-eagle-56 - 把原先的代码修改成了css+js
+ * MIT License
+ * Copyright - 2026 kennyotsu (kotsu) 
+ * Copyright - 2026 00Kubi (Kubi)
+ */
+
+/* 面板本体：相对定位好叠 deco；无 transform-style:preserve-3d（刻意，降耗） */
+.ans-guide-panel {
+  position: relative;
+  z-index: 1;
+  width: min(800px, calc(100vw - 2rem));
+  margin: 2rem auto;
+  border-radius: 16px;
+  overflow: hidden;
+  will-change: transform;
+  transition: transform 0.12s ease-out, border-color 0.25s ease, box-shadow 0.25s ease;
+  background: linear-gradient(160deg, #141620, #1b1e2c) !important;
+  border: 1px solid rgba(139, 92, 246, 0.42) !important;
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.08),
+    0 0 34px rgba(139, 92, 246, 0.2),
+    0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* 打开 overlay 时播一次入场，不要绑在 hover 上 */
+.ans-ov.is-open .ans-guide-panel {
+  animation: ansGuideIn 0.38s ease;
+}
+
+@keyframes ansGuideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ans-guide-panel:hover {
+  border-color: rgba(139, 92, 246, 0.75) !important;
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.16),
+    0 0 44px rgba(139, 92, 246, 0.3),
+    0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* 标题条：z-index:2 盖住扫描线和粒子 */
+.ans-guide-head {
+  position: relative;
+  z-index: 2;
+  padding: 0.95rem 1.1rem;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.28);
+  color: #e8ecf3;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+/* 正文滚动区：max-height 按视口扣掉头尾，避免小屏撑出页 */
+.ans-guide-body {
+  position: relative;
+  z-index: 2;
+  padding: 1rem 1.2rem;
+  color: #c8ccd4;
+  max-height: calc(100vh - 8rem);
+  overflow: auto;
+}
+
+.ans-guide-body h6 {
+  color: #a5b4fc;
+}
+
+.ans-guide-body p {
+  color: #c8ccd4;
+}
+
+/* 装饰层：绝对铺满、不吃鼠标，下面的扫描线/辉光都放这里 */
+.ans-guide-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 横扫高光线：默认 scaleX(0)，动画里拉到 1 */
+.ans-guide-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.4), transparent);
+  transform: scaleX(0);
+  animation: ansGuideLine 3.4s linear infinite;
+}
+
+.ans-guide-line:nth-child(1) {
+  top: 18%;
+}
+
+.ans-guide-line:nth-child(2) {
+  top: 38%;
+  animation-delay: 0.9s;
+}
+
+.ans-guide-line:nth-child(3) {
+  top: 58%;
+  animation-delay: 1.8s;
+}
+
+.ans-guide-line:nth-child(4) {
+  top: 78%;
+  animation-delay: 2.7s;
+}
+
+@keyframes ansGuideLine {
+  0%,
+  100% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* 从上往下扫的光带，高度 90px 和动画位移配套 */
+.ans-guide-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 90px;
+  z-index: 1;
+  background: linear-gradient(to bottom, transparent, rgba(139, 92, 246, 0.09), transparent);
+  transform: translateY(-90px);
+  animation: ansGuideScan 3s linear infinite;
+}
+
+@keyframes ansGuideScan {
+  0% {
+    transform: translateY(-90px);
+  }
+  100% {
+    transform: translateY(85vh);
+  }
+}
+
+/* 角落两团光晕。改颜色：下面 --1 / --2 的 rgba。改大小：width/height。 */
+.ans-guide-glow {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.ans-guide-glow--1 {
+  top: -70px;
+  left: -70px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.22), transparent 70%);
+}
+
+.ans-guide-glow--2 {
+  bottom: -80px;
+  right: -70px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.22), transparent 70%);
+}
+
+/* 四角括号装饰，--tl/tr/bl/br 只保留对应两边的 border */
+.ans-guide-corner {
+  position: absolute;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(139, 92, 246, 0.55);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ans-guide-corner--tl {
+  top: 10px;
+  left: 10px;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 6px;
+}
+
+.ans-guide-corner--tr {
+  top: 10px;
+  right: 10px;
+  border-left: 0;
+  border-bottom: 0;
+  border-top-right-radius: 6px;
+}
+
+.ans-guide-corner--bl {
+  bottom: 10px;
+  left: 10px;
+  border-right: 0;
+  border-top: 0;
+  border-bottom-left-radius: 6px;
+}
+
+.ans-guide-corner--br {
+  bottom: 10px;
+  right: 10px;
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 6px;
+}
+
+.ans-guide-panel:hover .ans-guide-corner {
+  border-color: rgba(167, 139, 250, 0.95);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.55);
+}
+
+/* 鼠标高光层，目前只做静态径向，tilt 不带动它（原脚本也没动） */
+.ans-guide-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.12), transparent 55%);
+}
+
+/* 粒子宿主：guide.js 往这里塞 .ans-guide-dot / .ans-guide-orb */
+.ans-guide-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 绿点。写在本卡 CSS 里，别的卡不会莫名其妙带上粒子样式 */
+.ans-guide-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 9px #34d399, 0 0 19px rgba(52, 211, 153, 0.6);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+/* 光斑 */
+.ans-guide-orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.25), transparent 70%);
+  filter: blur(18px);
+}

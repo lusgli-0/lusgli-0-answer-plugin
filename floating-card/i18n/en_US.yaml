@@ -1,0 +1,26 @@
+# 后台文案走 go-i18n 的 other；前端走 plugin.floating_card.frontend
+plugin:
+  floating_card:
+    backend:
+      info:
+        name:
+          other: Floating card
+        description:
+          other: Configurable overlay cards (community guide, daily rune, or your own HTML)
+      config:
+        cards_dir:
+          title:
+            other: Card files directory (volume)
+          description:
+            other: Each card lives in cards/{id}/. This is /data/floating-card in Docker. Do not edit this box; it only shows the path.
+        usage:
+          title:
+            other: How to edit cards
+          description:
+            other: >-
+              Edit the html/css/js files under cards/{id}/ directly, then refresh the page (no restart).
+              Card id = folder name under cards/. Delete the folder to remove a card.
+              Open with data-ans-card="id" or menu payload.card_id.
+              Features: tilt on hover, guide green particles, daily rune draw.
+    frontend:
+      name: Floating card

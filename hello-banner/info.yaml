@@ -1,0 +1,12 @@
+# 插件身份证。后台列表、启用开关、前端加载，都认 slug_name。
+#   文件夹 / package.json 的 name → hello-banner
+#   slug_name                    → hello_banner
+#   go.mod 的 module             → github.com/lusgli-0/lusgli-0-answer-plugin/hello-banner
+#
+# 不写官方已有类型，防止被PluginKit放进不合适的插槽里
+# 自造一个插件种类：overlay，表示这是一个悬浮层插件
+slug_name: hello_banner
+type: overlay
+version: 0.0.1
+author: lusgli-0
+link: https://github.com/lusgli-0/lusgli-0-answer-plugin

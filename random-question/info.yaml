@@ -1,0 +1,10 @@
+# 随机问题插件元数据。
+# PluginKit / pnpm pre-install 读 slug_name 做成 ui/src/plugins/index.ts 的 lazy import 键；
+# 后台插件列表、启用状态也用这个 slug。必须是下划线 random_question，不能改成连字符。
+# type: sidebar 只是让它能作为标准 UI 插件被 PluginKit 动态加载；
+# SideNav 写死只渲染 slug === quick_links，所以本插件的 Component 不会被挂到侧栏。
+slug_name: random_question
+type: sidebar
+version: 0.0.1
+author: lusgli-0
+link: https://github.com/lusgli-0/lusgli-0-answer-plugin

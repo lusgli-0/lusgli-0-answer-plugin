@@ -1,0 +1,28 @@
+# answer build 会把 plugin: 这一段合并进主站英文包。
+# 路径必须和 translation.go 的常量对得上。
+plugin:
+  hello_banner:
+    backend:
+      info:
+        name:
+          other: Hello banner
+        description:
+          other: Show a local-time greeting plus a random quote
+      config:
+        greeting_slots:
+          title:
+            other: Greeting slots
+          description:
+            other: JSON array. from is hour 0–23, to is 0–24 (from inclusive, to exclusive; 24 means end of day). First match wins; from>to wraps overnight. from equal to to is invalid. Add an object to create a new slot.
+        quotes:
+          title:
+            other: Quotes
+          description:
+            other: One per line. A random line is shown beside the greeting.
+        display_rules:
+          title:
+            other: Display rules
+          description:
+            other: Limit how many times the banner may appear in a time window. Add or remove rules (start, end, max count, daily or every N hours). With no rules the banner always shows. Overnight ranges such as 22:00–02:00 are allowed. Validation runs in the browser.
+    frontend:
+      name: Hello banner

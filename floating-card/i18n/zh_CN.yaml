@@ -1,0 +1,25 @@
+plugin:
+  floating_card:
+    backend:
+      info:
+        name:
+          other: 悬浮卡片
+        description:
+          other: 可配置悬浮层（社区公告、每日符文，或自己贴 HTML/CSS）
+      config:
+        cards_dir:
+          title:
+            other: 卡片文件目录（数据卷）
+          description:
+            other: 每张卡在下面 cards/卡名/ 里。这就是 Docker 挂 /data 时对应的 floating-card。不要改这个框，只是告诉你路径。
+        usage:
+          title:
+            other: 怎么改卡片
+          description:
+            other: >-
+              直接编辑 cards/卡名/ 里的 html/css/js，改完刷新前台即可，不用重启。
+              卡名 = cards 子文件夹名；删掉文件夹即删卡。
+              打开：data-ans-card="卡名" 或菜单 payload.card_id。
+              功能：tilt 鼠标倾斜、公告绿斑粒子、符文每日一签。
+    frontend:
+      name: 悬浮卡片

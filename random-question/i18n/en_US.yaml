@@ -1,0 +1,20 @@
+# 英文文案。answer build 会把 plugin: 整段合并进主站 i18n/en_US.yaml。
+# 键路径必须和 i18n/translation.go 里的常量一致。
+plugin:
+  random_question:
+    backend:
+      info:
+        name:
+          other: Random question
+        description:
+          other: Jump to a random question when the sidebar menu triggers this action
+      config:
+        page_size:
+          title:
+            other: Page size
+          description:
+            other: page_size for the question list request. Empty, 0 or negative values use 20; values above 100 use 100.
+          placeholder:
+            other: "20"
+    frontend:
+      name: Random question

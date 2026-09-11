@@ -1,0 +1,65 @@
+/*
+ * 共用悬浮层样式，从 yemie.js injectStyles 的前半段原样迁出。
+ * 类名一律 ans- 前缀：Answer 主题里已有 .modal / .offcanvas，不能抢 Bootstrap 的名字。
+ * ov = overlay。id 仍用 ans-ov-styles，方便和旧自定义页脚脚本共用一份，迁移期不重复注入。
+ */
+
+/* 全屏固定层：默认隐形且不吃点击；perspective 给子面板 tilt 用 */
+.ans-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 1055;
+  perspective: 1100px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+/* 打开态：立刻可点、淡入；visibility 不再延迟，否则点遮罩会穿透 */
+.ans-ov.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.35s ease;
+}
+
+/* 点击关闭的热区，铺满 overlay；真正的模糊/暗色是里面两层 */
+.ans-ov-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+/* 毛玻璃。关动画 0.35s 内仍要看见模糊，所以 visibility 延迟到过渡结束再藏 */
+.ans-ov-backdrop-blur {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  visibility: hidden;
+  transition: visibility 0s linear 0.35s;
+}
+
+.ans-ov.is-open .ans-ov-backdrop-blur {
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* 暗色罩，和 blur 拆开：只动 opacity，避免 blur 参与过渡吃 GPU */
+.ans-ov-backdrop-tint {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 4, 10, 0.55);
+  opacity: 0;
+  will-change: opacity;
+  transition: opacity 0.35s ease;
+}
+
+.ans-ov.is-open .ans-ov-backdrop-tint {
+  opacity: 1;
+}
+
+/* 锁 body 滚动，对应 yemie 的 body.ans-ov-open */
+body.ans-ov-open {
+  overflow: hidden;
+}
