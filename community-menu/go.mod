@@ -34,7 +34,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
-	github.com/sashabaranov/go-openai v1.41.2 // indirect
 	github.com/segmentfault/pacman v1.0.5-0.20230822083413-c0075a2d401f // indirect
 	github.com/segmentfault/pacman/contrib/i18n v0.0.0-20230822083413-c0075a2d401f // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
@@ -55,3 +54,5 @@ require (
 	xorm.io/builder v0.3.13 // indirect
 	xorm.io/xorm v1.3.2 // indirect
 )
+
+replace github.com/lusgli-0/lusgli-0-answer-plugin/plugin-shared => ../plugin-shared
