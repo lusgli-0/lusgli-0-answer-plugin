@@ -1,27 +1,41 @@
 # lusgli-0-answer-plugin
 
-先把 6 个目录全部推上去（含还没 tidy 的消费者）
+先把 6 个目录全部推上去
+```bash
 cd lusgli-0-answer-plugin
 git init && git add -A && git commit -m "publish plugins"
 git remote add origin https://github.com/lusgli-0/lusgli-0-answer-plugin.git
 git push -u origin main
+```
 
 打 tag 并推 tag —— 此刻 plugin-shared@v0.1.0 在 GitHub 上就能被解析了
-git tag v0.1.0
-git push origin v0.1.0
+注意：一个仓库多个 module，tag 必须带目录前缀，别打根 tag v0.1.0
+```bash
+git tag plugin-shared/v0.1.0
+git tag community-menu/v0.1.0
+git tag random-question/v0.1.0
+git tag floating-card/v0.1.0
+git tag hello-banner/v0.1.0
+git push origin --tags
+```
 
 现在才能 tidy 消费者（能拉到 plugin-shared@v0.1.0 了）
+```bash
 cd community-menu  && go mod tidy
 cd ../random-question && go mod tidy
 cd ../floating-card  && go mod tidy
 cd ../hello-banner   && go mod tidy
+```
 
-把 tidy 更新出来的 go.mod / go.sum 再提交推一次（"一起推"）
+把 tidy 更新出来的 go.mod / go.sum 再提交推一次
+```bash
 cd ..
 git add -A && git commit -m "go mod tidy"
 git push
+```
 
 进linux终端
+```bash
 cd /www/wwwroot
 git clone https://github.com/apache/answer.git answer
 cd answer
@@ -37,6 +51,8 @@ github.com/lusgli-0/lusgli-0-answer-plugin/floating-card@v0.1.0
 github.com/lusgli-0/lusgli-0-answer-plugin/hello-banner@v0.1.0
 EOF
 docker build -t answer
+```
+
 找到你的 `docker-compose.yml`，把里面这一行：
 ```yaml
 image: apache/answer
@@ -59,7 +75,7 @@ docker compose exec answer /usr/bin/answer plugin
 ```
 
 编译没成功的原因：
-1. Alpine 的官方软件源 `dl-cdn.alpinelinux.org` 国内连不上：
+1. Alpine 和 Golang 的官方源国内连不上：
 解决方法：
 ```bash
 cd /www/wwwroot/answer
