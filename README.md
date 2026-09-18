@@ -82,3 +82,24 @@ cd /www/wwwroot/answer
 sed -i '/^FROM /a RUN sed -i "s/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g" /etc/apk/repositories' Dockerfile
 sed -i 's|# ENV GOPROXY=https://proxy.golang.com.cn,direct|ENV GOPROXY=https://goproxy.cn,direct|' Dockerfile
 ```
+2. FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory：
+原因：
+Node.js 堆内存溢出。它在用 `react-app-rewired build`（webpack）打包 Answer 的前端 React 界面时，内存冲到 ~1000MB 就撞到上限崩了。
+解决办法：
+给 Node 加内存
+```bash
+sed -i '/^ENV ANSWER_MODULE/a ENV NODE_OPTIONS=--max-old-space-size=2048' Dockerfile
+```
+或是在另一台内存充足的机器上先构建，然后把tar文件传到服务器
+```bash
+docker build -t answer .
+docker save answer -o answer.tar
+#在服务器上把tar传上去，然后：
+docker load -i answer.tar
+docker compose up
+```
+3. HTTP/2 stream error:
+在`ENV GOPROXY=https://goproxy.cn,direct`下面加一行
+```
+ENV GODEBUG=http2client=0
+```
