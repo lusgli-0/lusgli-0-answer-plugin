@@ -1,9 +1,9 @@
 module github.com/lusgli-0/lusgli-0-answer-plugin/floating-card
 
-go 1.25.0
+go 1.23.0
 
 require (
-	github.com/apache/answer v1.7.1
+	github.com/apache/answer v1.7.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/lusgli-0/lusgli-0-answer-plugin/plugin-shared v0.1.0
 )
@@ -43,13 +43,15 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/yuin/goldmark v1.7.4 // indirect
 	golang.org/x/arch v0.10.0 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 	xorm.io/builder v0.3.13 // indirect
 	xorm.io/xorm v1.3.2 // indirect
 )
+
+replace github.com/lusgli-0/lusgli-0-answer-plugin/plugin-shared => ../plugin-shared
