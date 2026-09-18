@@ -21,3 +21,48 @@ cd ..
 git add -A && git commit -m "go mod tidy"
 git push
 
+进linux终端
+cd /www/wwwroot
+git clone https://github.com/apache/answer.git answer
+cd answer
+cat > script/plugin_list <<'EOF'
+github.com/apache/answer-plugins/connector-basic@latest
+github.com/apache/answer-plugins/reviewer-basic@latest
+github.com/apache/answer-plugins/captcha-basic@latest
+github.com/apache/answer-plugins/render-markdown-codehighlight@latest
+github.com/lusgli-0/lusgli-0-answer-plugin/plugin-shared@v0.1.0
+github.com/lusgli-0/lusgli-0-answer-plugin/community-menu@v0.1.0
+github.com/lusgli-0/lusgli-0-answer-plugin/random-question@v0.1.0
+github.com/lusgli-0/lusgli-0-answer-plugin/floating-card@v0.1.0
+github.com/lusgli-0/lusgli-0-answer-plugin/hello-banner@v0.1.0
+EOF
+docker build -t answer
+找到你的 `docker-compose.yml`，把里面这一行：
+```yaml
+image: apache/answer
+```
+改成：
+```yaml
+image: answer
+```
+记得先停旧容器：
+```bash
+docker stop <旧容器名>
+```
+在 `docker-compose.yml` 所在目录，跑：
+```bash
+docker compose up -d
+```
+然后验证：
+```bash
+docker compose exec answer /usr/bin/answer plugin
+```
+
+编译没成功的原因：
+1. Alpine 的官方软件源 `dl-cdn.alpinelinux.org` 国内连不上：
+解决方法：
+```bash
+cd /www/wwwroot/answer
+sed -i '/^FROM /a RUN sed -i "s/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g" /etc/apk/repositories' Dockerfile
+sed -i 's|# ENV GOPROXY=https://proxy.golang.com.cn,direct|ENV GOPROXY=https://goproxy.cn,direct|' Dockerfile
+```

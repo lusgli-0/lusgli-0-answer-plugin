@@ -1,0 +1,40 @@
+# 宝塔源码部署answer
+services:
+   answer:
+    image: answer
+    build:
+      context: .
+    networks:
+      - baota_net
+    deploy:
+      resources:
+        limits:
+          cpus: 0
+          memory: 0MB
+    ports:
+      - 127.0.0.1:9080:80
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /www/dk_project/dk_app/answer/answer/answer-data:/data
+    environment:
+      - AUTO_INSTALL=true
+      - DB_TYPE=mysql
+      - DB_USERNAME=answer
+      - DB_PASSWORD= 
+      - DB_HOST=host.docker.internal
+      - DB_NAME=answer
+      - LANGUAGE=zh_CN
+      - SITE_NAME= 
+      - SITE_URL= 
+      - CONTACT_EMAIL= 
+      - ADMIN_NAME= 
+      - ADMIN_PASSWORD= 
+      - ADMIN_EMAIL= 
+      - EXTERNAL_CONTENT_DISPLAY=always_display
+    labels:
+      createdBy: "bt_apps"
+networks:
+  baota_net:
+    external: true

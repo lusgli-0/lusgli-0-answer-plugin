@@ -1,0 +1,83 @@
+<!-- 右侧栏趣味组件：社区水晶球（效果脚本在页脚框） -->
+<style>
+  .ans-crystal-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #fff;
+    position: relative;
+  }
+  .ans-crystal-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.15) 0%, transparent 60%);
+    animation: ans-crystal-glow 4s ease-in-out infinite;
+  }
+  @keyframes ans-crystal-glow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(10%, 10%); }
+  }
+  .ans-crystal-body {
+    position: relative;
+    z-index: 1;
+    padding: 0.45rem 1.25rem 1.1rem;   /* 上部空白收紧 */
+    text-align: center;
+  }
+  .ans-crystal-slot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: -16px 0 0;                 /* 球体整体上提 */
+  }
+  .ans-crystal-quote {
+    position: relative;
+    height: 3em;
+    margin: 0.15rem 0 0.1rem;          /* 上下空白收紧 */
+    font-size: .95rem;
+    line-height: 1.5;
+  }
+  .ans-crystal-mood {
+    display: flex;
+    justify-content: center;
+    gap: .5rem;
+    margin-top: 0.2rem;                /* 与 quote 间距收紧 */
+    font-size: 1.2rem;
+  }
+  .ans-crystal-mood span {
+    animation: ans-crystal-bounce 2s ease-in-out infinite;
+  }
+  .ans-crystal-mood span:nth-child(2) { animation-delay: .2s; }
+  .ans-crystal-mood span:nth-child(3) { animation-delay: .4s; }
+  .ans-crystal-mood span:nth-child(4) { animation-delay: .6s; }
+  .ans-crystal-mood span:nth-child(5) { animation-delay: .8s; }
+  @keyframes ans-crystal-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .ans-crystal-footer {
+    font-size: .75rem;
+    opacity: .5;
+    margin-top: .35rem;
+  }
+</style>
+
+<div class="card mb-4 ans-crystal-card">
+  <div class="ans-crystal-body">
+    <div id="ansCrystalSlot" class="ans-crystal-slot"></div>
+    <div class="ans-crystal-quote">
+      <span>问题 POST 出去 答案连夜 GET 回来</span>
+      <span>RTFM + STFW 功德++</span>
+      <span>键盘当法杖 代码作咒文</span>
+      <span>回帖即 ACK EXP+=1</span>
+    </div>
+    <div class="ans-crystal-mood">
+      <span>☕</span><span>💡</span><span>🐛</span><span>✅</span><span>🎉</span>
+    </div>
+    <div class="ans-crystal-footer">今日社区能量：满格</div>
+  </div>
+</div>

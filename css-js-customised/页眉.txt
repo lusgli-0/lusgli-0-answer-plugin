@@ -1,0 +1,419 @@
+<script>
+(function () {
+  // 兜底字体：Jost（Futura 风格的免费替代），有 Futura PT 时会优先用它
+  (function () {
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap';
+    document.head.appendChild(link);
+  })();
+
+  function build() {
+    var a = document.querySelector('a.navbar-brand');
+    if (!a || a.getAttribute('data-tl-brand')) return;
+    var span = a.querySelector('span');
+    if (!span) return;
+    a.setAttribute('data-tl-brand', '1');
+
+    // 图标 + 文字组 并排居中
+    span.style.display = 'flex';
+    span.style.alignItems = 'center';
+    span.style.gap = '8px';
+
+    span.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' +
+        '<path d="M12 12V4a1 1 0 0 1 1-1h6.297a1 1 0 0 1 .651 1.759l-4.696 4.025"/>' +
+        '<path d="m12 21-7.414-7.414A2 2 0 0 1 4 12.172V6.415a1.002 1.002 0 0 1 1.707-.707L20 20.009"/>' +
+        '<path d="m12.214 3.381 8.414 14.966a1 1 0 0 1-.167 1.199l-1.168 1.163a1 1 0 0 1-.706.291H6.351a1 1 0 0 1-.625-.219L3.25 18.8a1 1 0 0 1 .631-1.781l4.165.027"/>' +
+      '</svg>' +
+      '<span style="position:relative;display:inline-block;line-height:1;transform:translateY(-3px)">' +
+        '<span style="font-family:\'Futura PT\',Futura,Jost,\'Noto Sans SC\',sans-serif;font-weight:500;font-size:19px;color:#f1f5f9;letter-spacing:.4px;white-space:nowrap">TechLake</span>' +
+        '<span style="position:absolute;right:-14px;bottom:-7px;font-family:Jost,\'Futura PT\',\'Noto Sans SC\',sans-serif;font-size:9px;font-weight:500;color:#a5b4fc;letter-spacing:1.5px;white-space:nowrap">community</span>' +
+      '</span>';
+  }
+  function start() {
+    build();
+    if (document.body) {
+      new MutationObserver(build).observe(document.body, { childList: true, subtree: true });
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+<script data-client>
+/* Copyright - 2026 kennyotsu (kotsu)
+   Copyright - 2026 00Kubi (Kubi) */
+/* 页眉模块：使用指南（赛博风）+ 符文占卜（羊皮卷轴风 · 每日一签）
+   懒创建；已做性能优化：面板不再建 3D 上下文、辉光/光斑去掉 blur、
+   鼠标移动时关过渡直接跟手，只在移出回正时用动画 */
+(function () {
+  var TG = 'ans-custom-guide-trigger';
+  var TR = 'ans-custom-rune-trigger';
+  var KEY = 'ans-rune-daily';
+
+  var DECK = [
+    ['M6 4 V20 M6 5 L13 3 M6 11 L13 9', 'Fehu', '丰饶', 'Python', '编程语言', '自动化为王：脚本、爬虫、数据分析都在射程内。', '今天写一个自动化脚本，把重复操作交给代码。'],
+    ['M5 4 V13 C5 18 19 18 19 13 V4', 'Uruz', '原牛', 'Rust', '编程语言', '内存安全与性能并重的系统级语言。', '安装 rustup，跑完 rustlings 前 3 题。'],
+    ['M7 4 V20 M7 6 L17 7 V13 Z', 'Thurisaz', '雷刺', 'Linux 运维', 'Linux运维', '服务器世界的底层法则：权限、进程、网络。', '熟记 grep/awk/sed 三剑客，动手排查一次日志。'],
+    ['M7 4 V20 M7 9 L18 4 M7 12 L18 20', 'Ansuz', '神启', 'TypeScript', '编程语言', '给 JavaScript 装上类型约束，工程化第一步。', '把一个小 JS 项目迁到 TS，让类型守住边界。'],
+    ['M6 4 V20 M6 5 L15 4 L6 20', 'Raido', '旅途', 'Git', '技术', '版本控制与协作的工作流艺术。', '练习一次 interactive rebase，整理提交历史。'],
+    ['M18 4 L5 12 L18 20', 'Kenaz', '火炬', 'Vue 3', '框架', '组合式 API 让组件化更清晰。', '用 setup 语法写一个小组件并跑起来。'],
+    ['M4 4 L20 20 M20 4 L4 20', 'Gebo', '礼物', 'SQL', '技术', '数据查询与索引优化是后端基本功。', '用 EXPLAIN 分析一条慢查询并优化它。'],
+    ['M12 4 V20', 'Isa', '冰', 'Docker', '技术', '一次构建，到处运行；环境问题终结者。', '把你正在做的项目打包成 Dockerfile。'],
+    ['M12 20 V7 M6 10 L12 4 L18 10', 'Tiwaz', '战神', 'Nginx', 'Linux运维', '反向代理、负载均衡与 HTTPS 的守门人。', '配一个反向代理，并加上 HTTPS。'],
+    ['M4 12 L12 3 L20 12 L12 21 L4 12 Z M10 12 V20 M14 12 V20', 'Othala', '传承', 'Kubernetes', '技术', '云原生编排，现代部署的基石。', '用 minikube 起一个集群，部署一个 nginx。']
+  ];
+
+  var els = { guide: null, rune: null };
+  var timer = null;
+  var fxHide = null;
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function injectStyles() {
+    if (document.getElementById('ans-ov-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'ans-ov-styles';
+    s.textContent =
+      /* 共用悬浮层与遮罩 */
+      '.ans-ov{position:fixed;inset:0;z-index:1055;perspective:1100px;opacity:0;visibility:hidden;' +
+        'pointer-events:none;transition:opacity .35s ease,visibility 0s linear .35s;}' +
+      '.ans-ov.is-open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .35s ease;}' +
+      '.ans-ov-backdrop{position:absolute;inset:0;}' +
+      '.ans-ov-backdrop-blur{position:absolute;inset:0;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);' +
+        'visibility:hidden;transition:visibility 0s linear .35s;}' +
+      '.ans-ov.is-open .ans-ov-backdrop-blur{visibility:visible;transition-delay:0s;}' +
+      '.ans-ov-backdrop-tint{position:absolute;inset:0;background:rgba(2,4,10,.55);opacity:0;' +
+        'will-change:opacity;transition:opacity .35s ease;}' +
+      '.ans-ov.is-open .ans-ov-backdrop-tint{opacity:1;}' +
+      'body.ans-ov-open{overflow:hidden;}' +
+      /* 使用指南：赛博紫面板（性能版：无 3D 上下文、无模糊滤镜） */
+      '.ans-guide-panel{position:relative;z-index:1;width:min(800px,calc(100vw - 2rem));margin:2rem auto;' +
+        'border-radius:16px;overflow:hidden;will-change:transform;' +
+        'transition:transform .12s ease-out,border-color .25s ease,box-shadow .25s ease;' +
+        'background:linear-gradient(160deg,#141620,#1b1e2c) !important;' +
+        'border:1px solid rgba(139,92,246,.42) !important;' +
+        'box-shadow:0 0 0 1px rgba(139,92,246,.08),0 0 34px rgba(139,92,246,.2),0 24px 60px rgba(0,0,0,.6);}' +
+      '.ans-ov.is-open .ans-guide-panel{animation:ansGuideIn .38s ease;}' +
+      '@keyframes ansGuideIn{from{opacity:0;transform:translateY(-14px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}' +
+      '.ans-guide-panel:hover{border-color:rgba(139,92,246,.75) !important;' +
+        'box-shadow:0 0 0 1px rgba(139,92,246,.16),0 0 44px rgba(139,92,246,.3),0 24px 60px rgba(0,0,0,.6);}' +
+      '.ans-guide-head{position:relative;z-index:2;padding:.95rem 1.1rem;border-bottom:1px solid rgba(139,92,246,.28);' +
+        'color:#e8ecf3;font-weight:700;font-size:1.05rem;}' +
+      '.ans-guide-body{position:relative;z-index:2;padding:1rem 1.2rem;color:#c8ccd4;' +
+        'max-height:calc(100vh - 8rem);overflow:auto;}' +
+      '.ans-guide-body h6{color:#a5b4fc;}' +
+      '.ans-guide-body p{color:#c8ccd4;}' +
+      '.ans-guide-deco{position:absolute;inset:0;z-index:1;pointer-events:none;}' +
+      '.ans-guide-line{position:absolute;left:0;right:0;height:1px;' +
+        'background:linear-gradient(90deg,transparent,rgba(139,92,246,.4),transparent);' +
+        'transform:scaleX(0);animation:ansGuideLine 3.4s linear infinite;}' +
+      '.ans-guide-line:nth-child(1){top:18%;}' +
+      '.ans-guide-line:nth-child(2){top:38%;animation-delay:.9s;}' +
+      '.ans-guide-line:nth-child(3){top:58%;animation-delay:1.8s;}' +
+      '.ans-guide-line:nth-child(4){top:78%;animation-delay:2.7s;}' +
+      '@keyframes ansGuideLine{0%,100%{transform:scaleX(0);opacity:0}50%{transform:scaleX(1);opacity:1}}' +
+      '.ans-guide-scan{position:absolute;left:0;right:0;top:0;height:90px;z-index:1;' +
+        'background:linear-gradient(to bottom,transparent,rgba(139,92,246,.09),transparent);' +
+        'transform:translateY(-90px);animation:ansGuideScan 3s linear infinite;}' +
+      '@keyframes ansGuideScan{0%{transform:translateY(-90px)}100%{transform:translateY(85vh)}}' +
+      /* 辉光去掉 blur：radial-gradient 自带柔和衰减 */
+      '.ans-guide-glow{position:absolute;width:240px;height:240px;border-radius:50%;z-index:1;}' +
+      '.ans-guide-glow--1{top:-70px;left:-70px;background:radial-gradient(circle,rgba(139,92,246,.22),transparent 70%);}' +
+      '.ans-guide-glow--2{bottom:-80px;right:-70px;background:radial-gradient(circle,rgba(99,102,241,.22),transparent 70%);}' +
+      '.ans-guide-corner{position:absolute;z-index:2;width:18px;height:18px;border:2px solid rgba(139,92,246,.55);' +
+        'transition:border-color .3s ease,box-shadow .3s ease;}' +
+      '.ans-guide-corner--tl{top:10px;left:10px;border-right:0;border-bottom:0;border-top-left-radius:6px;}' +
+      '.ans-guide-corner--tr{top:10px;right:10px;border-left:0;border-bottom:0;border-top-right-radius:6px;}' +
+      '.ans-guide-corner--bl{bottom:10px;left:10px;border-right:0;border-top:0;border-bottom-left-radius:6px;}' +
+      '.ans-guide-corner--br{bottom:10px;right:10px;border-left:0;border-top:0;border-bottom-right-radius:6px;}' +
+      '.ans-guide-panel:hover .ans-guide-corner{border-color:rgba(167,139,250,.95);box-shadow:0 0 12px rgba(139,92,246,.55);}' +
+      '.ans-guide-glare{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .25s ease;' +
+        'background:radial-gradient(circle at 50% 50%,rgba(139,92,246,.12),transparent 55%);}' +
+      '.ans-guide-particles{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}' +
+      '.ans-guide-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:#34d399;' +
+        'box-shadow:0 0 6px #34d399,0 0 14px rgba(52,211,153,.6);opacity:0;transition:opacity .45s ease;}' +
+      /* 光斑去掉 blur：直接用径向渐变 */
+      '.ans-guide-orb{position:absolute;border-radius:50%;opacity:0;transition:opacity .6s ease;' +
+        'background:radial-gradient(circle,rgba(52,211,153,.25),transparent 70%);}' +
+      /* 符文占卜：羊皮卷轴面板 */
+      '.ans-rune-panel{position:relative;z-index:1;width:min(520px,calc(100vw - 2rem));margin:2rem auto;' +
+        'border-radius:12px;overflow:hidden;transform-style:preserve-3d;will-change:transform;' +
+        'transition:transform .12s ease-out,border-color .25s ease,box-shadow .25s ease;' +
+        'background-color:#e8d5aa !important;' +
+        'background-image:linear-gradient(160deg,#f2e4c3,#e3cda2),radial-gradient(rgba(120,90,40,.08) 1px,transparent 1.4px) !important;' +
+        'background-size:auto,5px 5px !important;border:2px solid #8a6d3b !important;' +
+        'box-shadow:0 0 0 1px rgba(138,109,59,.25),0 0 40px rgba(138,109,59,.28),0 24px 60px rgba(0,0,0,.55);}' +
+      '.ans-ov.is-open .ans-rune-panel{animation:ansRuneIn .38s ease;}' +
+      '@keyframes ansRuneIn{from{opacity:0;transform:translateY(-14px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}' +
+      '.ans-rune-panel:hover{border-color:#7a5c2e !important;' +
+        'box-shadow:0 0 0 1px rgba(138,109,59,.4),0 0 48px rgba(138,109,59,.35),0 24px 60px rgba(0,0,0,.55);}' +
+      '.ans-rune-head{position:relative;z-index:2;padding:.9rem 1.1rem;border-bottom:1px dashed rgba(74,58,34,.5);' +
+        'color:#3a2e1d;font-family:Consolas,"Noto Sans SC",monospace;font-weight:700;font-size:1rem;transform:translateZ(28px);}' +
+      '.ans-rune-body{position:relative;z-index:2;padding:1rem 1.2rem;color:#3a2e1d;transform:translateZ(28px);}' +
+      '.ans-rune-corner{position:absolute;z-index:2;width:18px;height:18px;border:2px solid rgba(138,109,59,.65);' +
+        'transition:border-color .3s ease,box-shadow .3s ease;}' +
+      '.ans-rune-corner--tl{top:10px;left:10px;border-right:0;border-bottom:0;border-top-left-radius:6px;}' +
+      '.ans-rune-corner--tr{top:10px;right:10px;border-left:0;border-bottom:0;border-top-right-radius:6px;}' +
+      '.ans-rune-corner--bl{bottom:10px;left:10px;border-right:0;border-top:0;border-bottom-left-radius:6px;}' +
+      '.ans-rune-corner--br{bottom:10px;right:10px;border-left:0;border-top:0;border-bottom-right-radius:6px;}' +
+      '.ans-rune-panel:hover .ans-rune-corner{border-color:#8a6d3b;box-shadow:0 0 12px rgba(138,109,59,.5);}' +
+      '.ans-rune-date{color:#7a5c2e;font-size:.8em;text-align:center;}' +
+      '.ans-rune-seal{width:110px;height:110px;margin:1rem auto .6rem;border-radius:50%;' +
+        'background:radial-gradient(circle at 35% 30%,#c94f3f,#8e2f22);' +
+        'box-shadow:inset 0 2px 6px rgba(255,255,255,.25),inset 0 -4px 10px rgba(0,0,0,.35),0 6px 16px rgba(0,0,0,.4);' +
+        'display:flex;align-items:center;justify-content:center;animation:ansRuneStamp .5s cubic-bezier(.34,1.56,.64,1);}' +
+      '@keyframes ansRuneStamp{from{opacity:0;transform:scale(1.6)}to{opacity:1;transform:scale(1)}}' +
+      '.ans-rune-seal svg{width:64px;height:64px;fill:none;stroke:#f3e3c2;stroke-width:1.6;' +
+        'stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(0,0,0,.4));}' +
+      '.ans-rune-cat{display:inline-block;padding:.1em .7em;border:1px solid rgba(74,58,34,.55);border-radius:999px;' +
+        'color:#6b5326;font-size:.72em;letter-spacing:.2em;}' +
+      '.ans-rune-topic{color:#2b2113;font-family:Consolas,monospace;font-size:1.35rem;font-weight:700;' +
+        'text-align:center;margin:.55rem 0 .2rem;}' +
+      '.ans-rune-name{color:#7a5c2e;font-family:Consolas,monospace;font-size:.82em;letter-spacing:.15em;' +
+        'text-align:center;margin-bottom:.7rem;}' +
+      '.ans-rune-meaning{color:#4a3a22;font-size:.9rem;text-align:center;margin:0 0 .6rem;}' +
+      '.ans-rune-guide{color:#2b2113;font-size:.9rem;background:rgba(138,109,59,.12);border-left:3px solid #8a6d3b;' +
+        'border-radius:0 6px 6px 0;padding:.55em .8em;margin:0 0 .8rem;}' +
+      '.ans-rune-note{color:#8a6d3b;font-size:.75em;text-align:center;margin:0 0 .3rem;}' +
+      '.ans-rune-countdown{color:#6b5326;font-family:Consolas,monospace;font-size:.8em;text-align:center;margin:0;}';
+    document.head.appendChild(s);
+  }
+
+  /* 性能版倾斜：移动中关过渡直接跟手，移出才回正动画 */
+  function bindTilt(panel) {
+    if (!panel) return;
+    var moving = false;
+    panel.addEventListener('mousemove', function (e) {
+      var r = panel.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      var px = (e.clientX - r.left) / r.width - .5;
+      var py = (e.clientY - r.top) / r.height - .5;
+      if (!moving) {
+        moving = true;
+        panel.style.transition = 'none';
+      }
+      panel.style.transform = 'rotateX(' + (-py * 8).toFixed(2) + 'deg) rotateY(' + (px * 8).toFixed(2) + 'deg)';
+    });
+    panel.addEventListener('mouseleave', function () {
+      moving = false;
+      panel.style.transition = 'transform .5s cubic-bezier(.23,1,.32,1)';
+      panel.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    });
+  }
+
+  function bindGreenFX(panel) {
+    var wrap = panel.querySelector('.ans-guide-particles');
+    if (!wrap) return null;
+    var arr = [], raf = null, last = 0, hideTimer = null;
+    function spawn() {
+      if (arr.length) return;
+      var r = panel.getBoundingClientRect(), W = r.width || 800, H = r.height || 520, i;
+      for (i = 0; i < 8; i++) {   /* 光点减到 8 个，进一步减压 */
+        var d = document.createElement('span');
+        d.className = 'ans-guide-dot';
+        d._x = Math.random() * W; d._y = Math.random() * H;
+        d._vx = (Math.random() - .5) * 36; d._vy = (Math.random() - .5) * 36;
+        d.style.left = d._x + 'px'; d.style.top = d._y + 'px';
+        wrap.appendChild(d); arr.push(d);
+      }
+      for (i = 0; i < 2; i++) {   /* 光斑减到 2 个 */
+        var o = document.createElement('span');
+        o.className = 'ans-guide-orb';
+        var size = 100 + Math.random() * 90;
+        o.style.width = size + 'px'; o.style.height = size + 'px';
+        o._x = Math.random() * W; o._y = Math.random() * H;
+        o._vx = (Math.random() - .5) * 22; o._vy = (Math.random() - .5) * 22;
+        o.style.left = o._x + 'px'; o.style.top = o._y + 'px';
+        wrap.appendChild(o); arr.push(o);
+      }
+    }
+    function step(now) {
+      var dt = Math.min((now - last) / 1000, .05); last = now;
+      var r = panel.getBoundingClientRect(), W = r.width, H = r.height;
+      if (!W || !H) { raf = null; return; }
+      for (var i = 0; i < arr.length; i++) {
+        var el = arr[i], m = 16;
+        el._x += el._vx * dt; el._y += el._vy * dt;
+        if (el._x < -m) el._x = W + m; else if (el._x > W + m) el._x = -m;
+        if (el._y < -m) el._y = H + m; else if (el._y > H + m) el._y = -m;
+        el.style.left = el._x + 'px'; el.style.top = el._y + 'px';
+      }
+      raf = requestAnimationFrame(step);
+    }
+    function show() {
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      spawn();
+      void panel.offsetWidth;
+      arr.forEach(function (el) { el.style.opacity = el.className.indexOf('orb') > -1 ? '.7' : '.9'; });
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    }
+    function hide() {
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+      arr.forEach(function (el) { el.style.opacity = '0'; });
+      var old = arr; arr = [];
+      hideTimer = setTimeout(function () {
+        old.forEach(function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+        hideTimer = null;
+      }, 650);
+    }
+    panel.addEventListener('mouseenter', show);
+    panel.addEventListener('mouseleave', hide);
+    return hide;
+  }
+
+  function buildGuide() {
+    if (els.guide) return;
+    var ov = document.createElement('div');
+    ov.id = 'ans-guide-overlay';
+    ov.className = 'ans-ov';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-hidden', 'true');
+    ov.innerHTML =
+      '<div class="ans-ov-backdrop">' +
+        '<div class="ans-ov-backdrop-blur"></div>' +
+        '<div class="ans-ov-backdrop-tint"></div>' +
+      '</div>' +
+      '<div class="ans-guide-panel">' +
+        '<div class="ans-guide-deco">' +
+          '<span class="ans-guide-line"></span><span class="ans-guide-line"></span>' +
+          '<span class="ans-guide-line"></span><span class="ans-guide-line"></span>' +
+        '</div>' +
+        '<div class="ans-guide-scan"></div>' +
+        '<div class="ans-guide-glow ans-guide-glow--1"></div>' +
+        '<div class="ans-guide-glow ans-guide-glow--2"></div>' +
+        '<div class="ans-guide-particles"></div>' +
+        '<div class="ans-guide-glare"></div>' +
+        '<span class="ans-guide-corner ans-guide-corner--tl"></span>' +
+        '<span class="ans-guide-corner ans-guide-corner--tr"></span>' +
+        '<span class="ans-guide-corner ans-guide-corner--bl"></span>' +
+        '<span class="ans-guide-corner ans-guide-corner--br"></span>' +
+        '<div class="ans-guide-head">📖 社区公告</div>' +
+        '<div class="ans-guide-body">' +
+          '<p class="text-secondary">Hi! Lusper Glimmer is here!˚✧\\(●∇●)/˚✧</p>' +
+          '<h6>社区规范</h6><p>禁止：政治 / 引战 / 人身攻击。<br><br><strong>严禁开盒。</strong> 任何泄露他人隐私信息（包括但不限于真实姓名、联系方式、住址等）的行为均属违规。尤其禁止以任何形式提及 TechLake 站长及相关人员的真实身份信息（包括姓名简写、绰号等）。<strong style="color: #ff4d4f;">违规者从重处理。</strong><br><br>除灌水区外只允许提正经问题。已添加“灌水区”标签的帖子，原则上不建议再添加其他标签，除非该帖确有参考价值，可加一个最契合的内容标签。<br><br>违规 ≤ 3 次：口头提醒一次 + 删帖。违规 > 3 次：直接封号。请遵守社区准则，友善交流。</p>' +
+          '<h6>lusgli-0\'s message</h6><p>Hi，我是 lusgli-0。这里是 TechLake community，一个讨论代码和技术的社区，挂靠在 luoling.psychologylake.org.cn 项目下。我是该项目的 team member。<br><br>社区基于 Apache Answer 搭建，经过了一些 CSS 和 JS 的自定义。自定义部分后续将进行二次审查和修改，并补充版权标注。<br><br>Answer 很强大，但灵活性仍有不足。我计划先在现有基础上做轻量定制，后续再用 Webman 框架重写一个更易开发和测试的问答平台。现有数据不会丢失，届时会迁移过去。<br><br>欢迎各位极客在此留下痕迹。lusper 和 TechLake 会越来越好。</p>' +
+          '<h6></h6><p></p>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    bindTilt(ov.querySelector('.ans-guide-panel'));
+    fxHide = bindGreenFX(ov.querySelector('.ans-guide-panel'));
+    els.guide = ov;
+  }
+
+  function buildRune() {
+    if (els.rune) return;
+    var ov = document.createElement('div');
+    ov.id = 'ans-rune-overlay';
+    ov.className = 'ans-ov';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-hidden', 'true');
+    ov.innerHTML =
+      '<div class="ans-ov-backdrop">' +
+        '<div class="ans-ov-backdrop-blur"></div>' +
+        '<div class="ans-ov-backdrop-tint"></div>' +
+      '</div>' +
+      '<div class="ans-rune-panel">' +
+        '<span class="ans-rune-corner ans-rune-corner--tl"></span>' +
+        '<span class="ans-rune-corner ans-rune-corner--tr"></span>' +
+        '<span class="ans-rune-corner ans-rune-corner--bl"></span>' +
+        '<span class="ans-rune-corner ans-rune-corner--br"></span>' +
+        '<div class="ans-rune-head">🔮 今日符文占卜</div>' +
+        '<div class="ans-rune-body">' +
+          '<div class="ans-rune-date"></div>' +
+          '<div class="ans-rune-seal"></div>' +
+          '<div style="text-align:center"><span class="ans-rune-cat"></span></div>' +
+          '<div class="ans-rune-topic"></div>' +
+          '<div class="ans-rune-name"></div>' +
+          '<p class="ans-rune-meaning"></p>' +
+          '<p class="ans-rune-guide"></p>' +
+          '<p class="ans-rune-note">每日限占一次 · 明日解锁新签</p>' +
+          '<p class="ans-rune-countdown"></p>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    bindTilt(ov.querySelector('.ans-rune-panel'));
+    els.rune = ov;
+  }
+
+  function startCountdown() {
+    if (timer) clearInterval(timer);
+    var el = els.rune.querySelector('.ans-rune-countdown');
+    if (!el) return;
+    function tick() {
+      var now = new Date();
+      var mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      var s = Math.max(0, Math.floor((mid - now) / 1000));
+      el.textContent = '距离下次占卜：' + pad2(Math.floor(s / 3600)) + ':' +
+        pad2(Math.floor(s % 3600 / 60)) + ':' + pad2(s % 60);
+    }
+    tick();
+    timer = setInterval(tick, 1000);
+  }
+
+  function drawRune() {
+    var today = todayKey(), idx = null;
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (raw && raw.date === today && typeof raw.index === 'number') idx = raw.index;
+    } catch (e) {}
+    if (idx === null) {
+      idx = Math.floor(Math.random() * DECK.length);
+      try { localStorage.setItem(KEY, JSON.stringify({ date: today, index: idx })); } catch (e) {}
+    }
+    var it = DECK[idx];
+    els.rune.querySelector('.ans-rune-date').textContent = today + ' · 每日一签';
+    els.rune.querySelector('.ans-rune-seal').innerHTML =
+      '<svg viewBox="0 0 24 24"><path d="' + it[0] + '"/></svg>';
+    els.rune.querySelector('.ans-rune-cat').textContent = it[4];
+    els.rune.querySelector('.ans-rune-topic').textContent = it[3];
+    els.rune.querySelector('.ans-rune-name').textContent = it[1] + ' · ' + it[2];
+    els.rune.querySelector('.ans-rune-meaning').textContent = it[5];
+    els.rune.querySelector('.ans-rune-guide').textContent = '今日功课：' + it[6];
+    startCountdown();
+  }
+
+  function openGuide() {
+    injectStyles(); buildGuide();
+    els.guide.classList.add('is-open');
+    els.guide.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('ans-ov-open');
+  }
+  function openRune() {
+    injectStyles(); buildRune(); drawRune();
+    els.rune.classList.add('is-open');
+    els.rune.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('ans-ov-open');
+  }
+  function closeAll() {
+    [els.guide, els.rune].forEach(function (ov) {
+      if (!ov) return;
+      ov.classList.remove('is-open');
+      ov.setAttribute('aria-hidden', 'true');
+    });
+    document.body.classList.remove('ans-ov-open');
+    if (fxHide) fxHide();
+    if (timer) { clearInterval(timer); timer = null; }
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.' + TG)) { e.preventDefault(); openGuide(); return; }
+    if (e.target.closest('.' + TR)) { e.preventDefault(); openRune(); return; }
+    if (e.target.closest('.ans-ov-backdrop')) { e.preventDefault(); closeAll(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAll();
+  });
+})();
+</script>
