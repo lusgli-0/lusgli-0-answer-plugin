@@ -1,0 +1,7 @@
+[
+  { "id": "guide", "text": "📖 社区公告", "action": "plugin", "plugin": "lite_runtime", "payload": { "cell_id": "guide" } },
+  { "id": "random", "text": "🎲 随机问题", "action": "plugin", "plugin": "random_question" },
+  { "id": "rune", "text": "🔮 符文占卜", "action": "plugin", "plugin": "lite_runtime", "payload": { "cell_id": "rune" } },
+  { "id": "external", "text": "🔗 外部链接", "action": "url", "url": "https://lusgli-0.github.io" },
+  { "id": "knowledge-base", "text": "📚 星辰秘典", "action": "plugin", "plugin": "lite_runtime", "payload": { "cell_id": "knowledge-base" } }
+]

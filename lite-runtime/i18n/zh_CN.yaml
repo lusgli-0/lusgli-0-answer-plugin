@@ -1,0 +1,27 @@
+plugin:
+  lite_runtime:
+    backend:
+      info:
+        name:
+          other: lite-runtime
+        description:
+          other: >- 
+            从数据目录加载自定义 Cell 的 HTML/CSS/JS，挂载为浮层并管理打开与关闭生命周期。
+            插件一经安装自动启用，answer 管理页无法禁用该插件。
+      config:
+        cells_dir:
+          title:
+            other: 卡片文件目录（数据卷）
+          description:
+            other: 每张卡在下面 cells/卡名/ 里。这就是 Docker 挂 /data 时对应的 lite-runtime。
+        usage:
+          title:
+            other: 怎么改卡片
+          description:
+            other: >-
+              直接编辑 cells/卡名/ 里的 html/css/js，改完刷新前台即可，不用重启。
+              卡名 = cells 子文件夹名；删掉文件夹即删卡。
+              打开：data-ans-cell="卡名" 或菜单 payload.cell_id。
+              现有功能：tilt 鼠标倾斜。
+    frontend:
+      name: lite-runtime
