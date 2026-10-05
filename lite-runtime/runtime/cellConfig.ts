@@ -2,9 +2,6 @@
 
 export interface CellConfig {
   cell_id: string;
-  html?: string;
-  css?: string;
-  js?: string;
 }
 
 export interface PublicConfig {

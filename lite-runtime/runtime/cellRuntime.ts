@@ -1,6 +1,6 @@
-import { runCellJs } from './run/runCellJs';
+import { loadCellModule, runCellJs } from './run/runCellJs';
 import { injectCellStyles, injectSharedStyles } from './mount/styles';
-import type { CellConfig, PublicConfig } from './cellConfig';
+import type { PublicConfig } from './cellConfig';
 import { createLifecycle } from './lifecycle';
 import type { CellLifecycle } from './lifecycle';
 import { mountCell } from './mount/cell';
@@ -17,14 +17,12 @@ let currentId: string | null = null;
 let latest: PublicConfig | null = null;
 let removeCellEvents: (() => void) | undefined;
 
-function createCellSlot(cell: CellConfig): CellSlot {
-  const mounted = mountCell(cell);
-  const lifecycle = createLifecycle();
-  runCellJs(
-    cell.js || '',
-    { overlay: mounted.overlay, panel: mounted.panel },
-    lifecycle,
-  );
+function createCellSlot(cellId: string, html: string): CellSlot {
+  const mounted = mountCell(cellId, html);
+  const lifecycle = createLifecycle({
+    overlay: mounted.overlay,
+    panel: mounted.panel,
+  });
 
   return {
     mounted,
@@ -58,22 +56,39 @@ export function openCell(cellId: string): void {
   const id = String(cellId || '').trim();
   const config = latest;
   if (!config) return;
-  const cell = config.cells.find((item) => item.cell_id === id);
-  if (!cell) return;
+  if (!config.cells.some((item) => item.cell_id === id)) return;
+  if (currentId === id && !slots.has(id)) return;
 
   if (currentId && currentId !== id) closeAll();
   injectSharedStyles(config.shared_css);
-  if (cell.css) injectCellStyles(cell.cell_id, cell.css);
 
-  let slot = slots.get(id);
-  if (!slot) {
-    slot = createCellSlot(cell);
-    slots.set(id, slot);
+  const existingSlot = slots.get(id);
+  if (existingSlot) {
+    setOverlayOpen(existingSlot.mounted.overlay, true);
+    currentId = id;
+    lockBody(true);
+    existingSlot.lifecycle.open();
+    return;
   }
 
-  setOverlayOpen(slot.mounted.overlay, true);
   currentId = id;
-  lockBody(true);
-  slot.lifecycle.open();
-}
+  void loadCellModule(id)
+    .then((cellModule) => {
+      if (currentId !== id) return;
 
+      const slot = createCellSlot(id, cellModule.html);
+      slots.set(id, slot);
+      if (cellModule.css) injectCellStyles(id, cellModule.css);
+      runCellJs(cellModule, { overlay: slot.mounted.overlay, panel: slot.mounted.panel }, slot.lifecycle);
+      setOverlayOpen(slot.mounted.overlay, true);
+      lockBody(true);
+      slot.lifecycle.open();
+    })
+    .catch((error: unknown) => {
+      console.error(`[lite-runtime] failed to load cell "${id}"`, error);
+      if (currentId === id) {
+        currentId = null;
+        lockBody(false);
+      }
+    });
+}

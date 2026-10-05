@@ -1,5 +1,5 @@
 /*
- * 羊皮卷轴「今日符文占卜」面板。从 yemie.js 迁出。
+ * Lite Runtime 羊皮卷轴「今日符文占卜」面板。
  * 和 guide 的差别：保留 transform-style:preserve-3d，标题/正文 translateZ(28px) 做出盖印厚度。
  */
 

@@ -12,23 +12,44 @@ export interface CellScriptApi extends CellLifecycleHooks {
   capabilities: typeof capabilities;
 }
 
+interface CellScriptContext {
+  panel: HTMLElement | null;
+  overlay: HTMLElement;
+  api: CellScriptApi;
+}
+
+export interface CellScriptModule {
+  html: string;
+  css: string;
+  default: (panel: HTMLElement | null, overlay: HTMLElement, api: CellScriptApi) => void;
+}
+
+const CELL_SCRIPT_API_PATH = '/answer/api/v1/lite-runtime/cell.js';
+
+export async function loadCellModule(cellId: string): Promise<CellScriptModule> {
+  const url = new URL(CELL_SCRIPT_API_PATH, window.location.origin);
+  url.searchParams.set('cell_id', cellId);
+  return (await import(/* webpackIgnore: true */ /* @vite-ignore */ url.href)) as CellScriptModule;
+}
+
 export function runCellJs(
-  js: string,
+  cellModule: CellScriptModule,
   host: CellHost,
   lifecycle: CellLifecycleHooks,
 ): void {
-  const code = String(js).trim();
-  if (!code) return;
-
   const api: CellScriptApi = {
     capabilities,
     onOpen: lifecycle.onOpen,
     onClose: lifecycle.onClose,
   };
 
+  const context: CellScriptContext = {
+    ...host,
+    api,
+  };
+
   try {
-    const run = new Function('panel', 'overlay', 'api', code);
-    run(host.panel, host.overlay, api);
+    cellModule.default(context.panel, context.overlay, context.api);
   } catch (error) {
     console.error('[lite-runtime] cell js failed', error);
   }

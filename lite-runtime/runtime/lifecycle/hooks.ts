@@ -7,8 +7,22 @@ export interface CellHost {
   panel: HTMLElement | null;
 }
 
+export interface CellScope {
+  signal: AbortSignal;
+  setInterval(handler: () => void, timeout?: number): void;
+  setTimeout(handler: () => void, timeout?: number): void;
+  listen(
+    target: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  onCleanup(handler: LifecycleHook): void;
+  dispose(): void;
+}
+
 export interface CellLifecycleHooks {
-  onOpen: (handler: LifecycleHook) => void;
+  onOpen: (handler: (scope: CellScope, host: CellHost) => void) => void;
   onClose: (handler: LifecycleHook) => void;
 }
 

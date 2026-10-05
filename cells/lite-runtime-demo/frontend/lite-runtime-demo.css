@@ -1,0 +1,231 @@
+.ans-ov#ans-ov-lite-runtime-demo .ans-ov-backdrop-blur {
+  backdrop-filter: blur(9px) saturate(145%);
+  -webkit-backdrop-filter: blur(9px) saturate(145%);
+}
+
+.ans-ov#ans-ov-lite-runtime-demo .ans-ov-backdrop-tint {
+  background:
+    radial-gradient(ellipse at 18% 22%, rgba(63, 105, 220, 0.38), transparent 48%),
+    radial-gradient(ellipse at 82% 76%, rgba(130, 67, 190, 0.3), transparent 46%),
+    rgba(5, 9, 24, 0.72);
+}
+
+.ans-ov#ans-ov-lite-runtime-demo .ans-ov-backdrop::after {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse at 28% 38%, rgba(104, 159, 255, 0.2), transparent 34%),
+    radial-gradient(ellipse at 72% 62%, rgba(219, 119, 255, 0.17), transparent 38%);
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.94);
+}
+
+.ans-ov#ans-ov-lite-runtime-demo.is-open .ans-ov-backdrop::after {
+  animation: ansLrdAurora 1.2s ease-out both;
+}
+
+@keyframes ansLrdAurora {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.72;
+    transform: scale(1.04);
+  }
+}
+
+.ans-lrd-panel {
+  box-sizing: border-box;
+  width: min(540px, calc(100vw - 32px));
+  margin: 10vh auto 0;
+  overflow: hidden;
+  color: #182230;
+  background: #f6f8fc;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  box-shadow: 0 28px 90px rgba(4, 12, 28, 0.35);
+  transform-style: preserve-3d;
+}
+
+.ans-lrd-panel *,
+.ans-lrd-panel *::before,
+.ans-lrd-panel *::after {
+  box-sizing: border-box;
+}
+
+.ans-lrd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 25px 28px 22px;
+  color: #fff;
+  background: radial-gradient(circle at top right, #6587f3, transparent 45%), #172b56;
+}
+
+.ans-lrd-eyebrow {
+  color: #bdccff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.ans-lrd-header h2 {
+  margin: 8px 0 6px;
+  color: inherit;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.ans-lrd-header p {
+  margin: 0;
+  color: #d6def7;
+  font-size: 13px;
+}
+
+.ans-lrd-close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.ans-lrd-content {
+  display: grid;
+  gap: 13px;
+  padding: 20px 28px 17px;
+}
+
+.ans-lrd-card {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+}
+
+.ans-lrd-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #586579;
+  font-size: 13px;
+}
+
+.ans-lrd-stat strong {
+  color: #284995;
+  font-size: 27px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ans-lrd-actions,
+.ans-lrd-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.ans-lrd-button {
+  min-height: 35px;
+  padding: 0 12px;
+  color: #344054;
+  background: #fff;
+  border: 1px solid #d7deea;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.ans-lrd-button:hover {
+  background: #f1f4fa;
+}
+
+.ans-lrd-button:active {
+  transform: translateY(1px);
+}
+
+.ans-lrd-button--primary {
+  color: #fff;
+  background: #3559bd;
+  border-color: #3559bd;
+}
+
+.ans-lrd-button--primary:hover {
+  background: #29499f;
+}
+
+.ans-lrd-label {
+  color: #586579;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ans-lrd-input-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 10px;
+  color: #182230;
+  background: #fff;
+  border: 1px solid #d7deea;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.ans-lrd-input-row input:focus {
+  border-color: #6587f3;
+  outline: 2px solid rgba(101, 135, 243, 0.18);
+}
+
+.ans-lrd-preview {
+  min-height: 19px;
+  margin: 11px 0 0;
+  color: #284995;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.ans-lrd-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  color: #7a8698;
+  font-size: 11px;
+}
+
+.ans-lrd-footer strong {
+  color: #46556d;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+  .ans-lrd-header {
+    padding: 22px 19px 19px;
+  }
+
+  .ans-lrd-content {
+    padding: 15px 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ans-lrd-button,
+  .ans-ov#ans-ov-lite-runtime-demo.is-open .ans-ov-backdrop::after {
+    transition: none;
+    animation: none;
+  }
+}

@@ -1,15 +1,6 @@
-/**
- * 符文占卜自己的每日一签。壳已经建好 overlay，这里只往面板空位填签。
- *
- * 约定：壳用 new Function('panel','overlay','api', 本文件) 调用。
- * api.data.deck / api.data.storage_key 来自这张卡的 data（牌组在 deck.json，
- * 后台没填时 Go 会补上）。api.todayKey() 是本地日历日，和倒计时同一套时区。
- * api.onOpen：每次打开 overlay 调一次（读缓存或抽新签）。
- * api.onClose：关掉时清 interval，别在后台空转。
- */
-if (!panel) return;
-if (api && api.capabilities && api.capabilities.tilt) {
-  api.capabilities.tilt(panel);
+if (!panel) {
+  console.error('[rune] panel is unavailable');
+  return;
 }
 
 var dateEl = panel.querySelector('.ans-rune-date');
@@ -20,69 +11,61 @@ var nameEl = panel.querySelector('.ans-rune-name');
 var meaningEl = panel.querySelector('.ans-rune-meaning');
 var guideEl = panel.querySelector('.ans-rune-guide');
 var countdownEl = panel.querySelector('.ans-rune-countdown');
-if (!dateEl || !sealEl) return;
+var deckEl = panel.querySelector('[data-ans-rune-deck]');
+if (!dateEl || !sealEl || !deckEl) {
+  console.error('[rune] required panel elements are missing');
+  return;
+}
 
-var deckEl = panel.querySelector('[data-rune-deck]');
-var deck = [];
-if (deckEl) {
+var data = (api && api.data) || {};
+var deck = Array.isArray(data.deck) ? data.deck : [];
+if (!deck.length) {
   try {
     var parsedDeck = JSON.parse(deckEl.textContent || '[]');
-    if (Array.isArray(parsedDeck)) deck = parsedDeck;
-  } catch (e) {
-    /* Invalid embedded deck is treated as empty. */
+    if (Array.isArray(parsedDeck)) {
+      deck = parsedDeck;
+    } else {
+      console.error('[rune] embedded deck must be an array');
+    }
+  } catch (error) {
+    console.error('[rune] failed to parse embedded deck', error);
   }
 }
-var storageKey = 'ans-rune-daily';
+var storageKey =
+  typeof data.storage_key === 'string' && data.storage_key
+    ? data.storage_key
+    : 'ans-rune-daily';
 
 function pad2(n) {
   return n < 10 ? '0' + n : '' + n;
 }
 
 function todayKey() {
-  if (api && typeof api.todayKey === 'function') return api.todayKey();
   var d = new Date();
   return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 
 function normalize(raw) {
-  if (!raw) return null;
   if (Array.isArray(raw)) {
-    var row = raw.map(function (x) {
+    return raw.slice(0, 7).map(function (x) {
       return String(x == null ? '' : x);
     });
-    if (!row.length) return null;
+  }
+  if (raw && typeof raw === 'object') {
     return [
-      row[0] || '',
-      row[1] || '',
-      row[2] || '',
-      row[3] || '',
-      row[4] || '',
-      row[5] || '',
-      row[6] || '',
+      raw.path || '',
+      raw.name || '',
+      raw.name_zh || '',
+      raw.topic || '',
+      raw.category || '',
+      raw.meaning || '',
+      raw.homework || '',
     ];
   }
-  return [
-    raw.path || '',
-    raw.name || '',
-    raw.name_zh || '',
-    raw.topic || '',
-    raw.category || '',
-    raw.meaning || '',
-    raw.homework || '',
-  ];
+  return null;
 }
 
-var timer = null;
-
-function stop() {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
-}
-
-function startCountdown() {
-  if (timer) clearInterval(timer);
+function startCountdown(scope) {
   if (!countdownEl) return;
   function tick() {
     var now = new Date();
@@ -97,65 +80,91 @@ function startCountdown() {
       pad2(s % 60);
   }
   tick();
-  timer = setInterval(tick, 1000);
+  scope.setInterval(tick, 1000);
 }
 
-function refresh() {
+function refresh(scope) {
   var today = todayKey();
   var idx = null;
 
   try {
-    var raw = JSON.parse(localStorage.getItem(storageKey) || 'null');
-    if (raw && raw.date === today && typeof raw.index === 'number') {
+    var raw = JSON.parse(window.localStorage.getItem(storageKey) || 'null');
+    if (raw && raw.date === today && Number.isInteger(raw.index)) {
       idx = raw.index;
     }
-  } catch (e) {
-    /* JSON 坏了当没抽过 */
+  } catch (error) {
+    console.warn('[rune] unable to read daily draw from local storage', error);
+  }
+
+  if (!deck.length) {
+    dateEl.textContent = today + ' · 每日一签';
+    sealEl.replaceChildren();
+    if (catEl) catEl.textContent = '';
+    if (topicEl) topicEl.textContent = '';
+    if (nameEl) nameEl.textContent = '';
+    if (meaningEl) meaningEl.textContent = '牌组为空';
+    if (guideEl) guideEl.textContent = '';
+    startCountdown(scope);
+    return;
   }
 
   if (idx === null) {
-    var len = deck.length;
-    if (!len) {
-      dateEl.textContent = today + ' · 每日一签';
-      sealEl.innerHTML = '';
-      if (catEl) catEl.textContent = '';
-      if (topicEl) topicEl.textContent = '';
-      if (nameEl) nameEl.textContent = '';
-      if (meaningEl) meaningEl.textContent = '牌组为空';
-      if (guideEl) guideEl.textContent = '';
-      startCountdown();
-      return;
-    }
-    idx = Math.floor(Math.random() * len);
+    idx = Math.floor(Math.random() * deck.length);
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ date: today, index: idx }));
-    } catch (e) {
-      /* 隐私模式：当面这张签照样能看 */
+      window.localStorage.setItem(storageKey, JSON.stringify({ date: today, index: idx }));
+    } catch (error) {
+      console.warn('[rune] unable to save daily draw to local storage', error);
     }
   }
 
-  if (idx < 0 || idx >= deck.length) {
-    idx = Math.max(0, deck.length - 1);
-  }
-
+  if (idx < 0 || idx >= deck.length) idx = Math.max(0, deck.length - 1);
   var it = normalize(deck[idx]);
-  if (!it) {
+  if (!it || it.length < 7) {
+    console.error('[rune] selected deck entry is invalid');
     dateEl.textContent = today + ' · 每日一签';
-    startCountdown();
+    startCountdown(scope);
     return;
   }
 
   dateEl.textContent = today + ' · 每日一签';
-  sealEl.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + it[0] + '"/></svg>';
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', it[0]);
+  svg.appendChild(path);
+  sealEl.replaceChildren(svg);
   if (catEl) catEl.textContent = it[4];
   if (topicEl) topicEl.textContent = it[3];
   if (nameEl) nameEl.textContent = it[1] + ' · ' + it[2];
   if (meaningEl) meaningEl.textContent = it[5];
   if (guideEl) guideEl.textContent = '今日功课：' + it[6];
-  startCountdown();
+  startCountdown(scope);
 }
 
-if (api) {
-  if (api.onOpen) api.onOpen(refresh);
-  if (api.onClose) api.onClose(stop);
+if (api && typeof api.onOpen === 'function') {
+  api.onOpen(function (scope) {
+    var moving = false;
+    scope.listen(panel, 'mousemove', function (event) {
+      var rect = panel.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      var px = (event.clientX - rect.left) / rect.width - 0.5;
+      var py = (event.clientY - rect.top) / rect.height - 0.5;
+      if (!moving) {
+        moving = true;
+        panel.style.transition = 'none';
+      }
+      panel.style.transform =
+        'rotateX(' + (-py * 8).toFixed(2) + 'deg) rotateY(' + (px * 8).toFixed(2) + 'deg)';
+    });
+    function resetTilt() {
+      moving = false;
+      panel.style.transition = 'transform .5s cubic-bezier(.23,1,.32,1)';
+      panel.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    }
+    scope.listen(panel, 'mouseleave', resetTilt);
+    scope.onCleanup(resetTilt);
+    refresh(scope);
+  });
+} else {
+  console.error('[rune] lifecycle API is unavailable');
 }

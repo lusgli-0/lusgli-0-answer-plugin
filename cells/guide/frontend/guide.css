@@ -1,11 +1,16 @@
 /*
- * 赛博紫「社区公告」面板。改完保存，刷新前台即可。
+ * Lite Runtime 赛博紫「社区公告」面板。改完保存，刷新前台即可。
  *
  * 怎么改常见外观：
  *  - 角落光晕颜色：.ans-guide-glow--1 / --2 的 radial-gradient
  *  - 绿点大小和颜色：.ans-guide-dot（数量在 guide.js）
  *  - 大光斑：.ans-guide-orb
  * 粒子要鼠标移到面板上才出现。
+ *
+ * 设计源自 https://uiverse.io/00Kubi/cowardly-eagle-56 - 把原先的代码修改成了css+js
+ * MIT License
+ * Copyright - 2026 kennyotsu (kotsu) 
+ * Copyright - 2026 00Kubi (Kubi)
  */
 
 /* 面板本体：相对定位好叠 deco；无 transform-style:preserve-3d（刻意，降耗） */
@@ -69,6 +74,14 @@
   color: #c8ccd4;
   max-height: calc(100vh - 8rem);
   overflow: auto;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge */
+}
+
+.ans-guide-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .ans-guide-body h6 {

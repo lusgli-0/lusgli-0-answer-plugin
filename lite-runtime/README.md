@@ -22,18 +22,18 @@ Cell 是 lite-runtime 中的一个微服务。每个 Cell 可以拥有自己的�
 
 ## 插件加载与执行
 
-数据目录中的 Cell `.js` 文件是在运行时通过 `new Function(...)` 执行的。
+数据目录中的 Cell `.js` 文件会在打开 Cell 时按需作为同源 ESM 模块加载。
 
 执行链路如下：
 
 1. 插件包入口 `index.ts` 先执行。它创建 `Component`，调用 `mountOutsideRoot()` 把 React 组件挂到页面，然后导出插件信息。
 2. React 挂载 `Component` 后，`Component.tsx` 的 effect 开始工作：请求后端配置、注册菜单 action，并调用 `startCellRuntime()` 安装全局点击和键盘事件。
-3. 用户触发某个 Cell 后，`events.ts` 或菜单 action 调用 `openCell(cellId)`。`cellRuntime.ts` 根据 `cell_id` 找到配置，创建浮层、注入样式，再调用 `runCellJs()` 执行 Cell 的 JS。
+3. 用户触发某个 Cell 后，`events.ts` 或菜单 action 调用 `openCell(cellId)`。`cellRuntime.ts` 根据 `cell_id` 加载该 Cell 的 HTML、CSS 和 JS，创建浮层、注入样式，再调用 `runCellJs()` 执行 Cell 的 JS。
 4. 点击浮层背景或按 Escape 会调用 `closeAll()`；关闭后保留已创建的 Cell slot，使其进入 idle 状态。
 
 ## 配置加载
 
-前台请求 `/answer/api/v1/lite-runtime/config`。Go 后端的 `handlePublicConfig()` 每次收到请求时扫描数据目录中的 `cells/`，读取每个 Cell 的 HTML、CSS 和 JS，并返回 `cells` 数组及内置共享样式。
+前台请求 `/answer/api/v1/lite-runtime/config`。Go 后端的 `handlePublicConfig()` 扫描数据目录中的 `cells/`，返回 Cell ID 列表及内置共享样式。打开某个 Cell 时，前端再通过 `/answer/api/v1/lite-runtime/cell.js?cell_id=...` 按需加载它的 HTML、CSS 和 JS。
 
 ## 打开与关闭
 
@@ -60,15 +60,28 @@ cells/{cell_id}/
     └── {cell_id}.js
 ```
 
-Cell 的 JS 会以 `panel`、`overlay` 和 `api` 作为运行时参数执行，可以通过 `api` 注册打开和关闭时的回调：
+Cell 的 JS 由同源 ESM 模块加载，runtime 会把 `panel`、`overlay`、`api` 传给它；这避免使用 `eval` / `new Function`，可兼容禁止 `unsafe-eval` 的 CSP。
+
+`api.onOpen` / `api.onClose` 注册打开和关闭时执行的代码。每次打开时 `onOpen` 会收到本次打开专属的 `scope` 和 `host`。`scope.setInterval`、`scope.setTimeout`、`scope.listen` 会在关闭时自动清理；用 `scope.signal` 取消请求。第三方对象需要用 `scope.onCleanup` 注册销毁逻辑。Cell 关闭时 runtime 会自动调用 `scope.dispose()`。
 
 ```javascript
-api.onOpen(() => {
-  console.log('cell 打开了');
+api.onOpen((scope, { panel, overlay }) => {
+  scope.setInterval(() => {
+    console.log('cell 正在打开');
+  }, 1000);
+
+  scope.listen(window, 'resize', () => {
+    console.log('窗口尺寸变化');
+  });
+
+  const chart = new Chart(panel, options);
+  scope.onCleanup(() => chart.destroy());
+
+  fetch('/api/data', { signal: scope.signal });
 });
 
 api.onClose(() => {
-  console.log('cell 关闭了');
+  console.log('cell 已关闭');
 });
 ```
 

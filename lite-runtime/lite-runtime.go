@@ -9,8 +9,10 @@ package lite_runtime
 
 import (
 	"embed"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/apache/answer/plugin"
@@ -27,11 +29,10 @@ var infoFS embed.FS
 //go:embed runtime
 var defaultFS embed.FS
 
+var cellIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 type Cell struct {
 	CellID string `json:"cell_id"`
-	HTML   string `json:"html"`
-	CSS    string `json:"css"`
-	JS     string `json:"js"`
 }
 
 type PublicConfig struct {
@@ -86,6 +87,7 @@ func (p *LiteRuntime) ConfigReceiver(_ []byte) error {
 // RegisterUnAuthRouter 挂到 mustUnAuthV1（前缀 /answer/api/v1），所以完整路径是 /answer/api/v1/lite-runtime/config。
 func (p *LiteRuntime) RegisterUnAuthRouter(r *gin.RouterGroup) {
 	r.GET("/lite-runtime/config", p.handlePublicConfig)
+	r.GET("/lite-runtime/cell.js", p.handleCellModule)
 }
 
 func (p *LiteRuntime) RegisterAuthUserRouter(_ *gin.RouterGroup) {}
@@ -97,29 +99,54 @@ func (p *LiteRuntime) handlePublicConfig(ctx *gin.Context) {
 	entries, _ := os.ReadDir(cellsDir())
 	cells := make([]Cell, 0, len(entries))
 	for _, entry := range entries {
-		if !entry.IsDir() {
+		if !entry.IsDir() || !cellIDPattern.MatchString(entry.Name()) {
 			continue
 		}
 
-		id := entry.Name()
-		frontendDir := filepath.Join(cellsDir(), id, "frontend")
-		read := func(ext string) string {
-			data, _ := os.ReadFile(filepath.Join(frontendDir, id+ext))
-			return string(data)
-		}
-
-		cells = append(cells, Cell{
-			CellID: id,
-			HTML:   read(".html"),
-			CSS:    read(".css"),
-			JS:     read(".js"),
-		})
+		cells = append(cells, Cell{CellID: entry.Name()})
 	}
 
 	pluginshared.WriteAPI(ctx, PublicConfig{
 		SharedCSS: mustFile("runtime/mount/overlay/overlay.css"),
 		Cells:     cells,
 	})
+}
+
+func (p *LiteRuntime) handleCellModule(ctx *gin.Context) {
+	id := ctx.Query("cell_id")
+	if !cellIDPattern.MatchString(id) {
+		ctx.AbortWithStatus(400)
+		return
+	}
+
+	frontendDir := filepath.Join(cellsDir(), id, "frontend")
+	html, htmlErr := os.ReadFile(filepath.Join(frontendDir, id+".html"))
+	css, cssErr := os.ReadFile(filepath.Join(frontendDir, id+".css"))
+	js, jsErr := os.ReadFile(filepath.Join(frontendDir, id+".js"))
+	if (htmlErr != nil && !os.IsNotExist(htmlErr)) ||
+		(cssErr != nil && !os.IsNotExist(cssErr)) ||
+		(jsErr != nil && !os.IsNotExist(jsErr)) {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	htmlJSON, err := json.Marshal(string(html))
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+	cssJSON, err := json.Marshal(string(css))
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.Header("Cache-Control", "no-store")
+	ctx.Data(200, "text/javascript; charset=utf-8", []byte(
+		"export const html = "+string(htmlJSON)+";\n"+
+			"export const css = "+string(cssJSON)+";\n"+
+			"export default function(panel, overlay, api) {\n"+string(js)+"\n}\n",
+	))
 }
 
 // 数据目录定位：

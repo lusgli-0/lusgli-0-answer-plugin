@@ -1,4 +1,3 @@
-import type { CellConfig } from '../cellConfig';
 import { createOverlayShell } from './overlay';
 
 export interface MountedCell {
@@ -7,9 +6,9 @@ export interface MountedCell {
   unmount: () => void;
 }
 
-export function mountCell(cell: CellConfig): MountedCell {
-  const overlay = createOverlayShell(cell.cell_id);
-  overlay.insertAdjacentHTML('beforeend', cell.html || '');
+export function mountCell(cellId: string, html: string): MountedCell {
+  const overlay = createOverlayShell(cellId);
+  overlay.insertAdjacentHTML('beforeend', html);
 
   return {
     overlay,
