@@ -1,0 +1,4 @@
+location = /fonts/fptmed.otf {
+    alias /www/dk_project/dk_app/answer/answer/answer-data/fonts/fptmed.otf;
+    default_type font/otf;
+}

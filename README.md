@@ -162,3 +162,23 @@ docker compose up
 ```dockerfile
 ENV GODEBUG=http2client=0
 ```
+
+
+## 更新 answer 上游源代码
+
+```bash
+# 1. 把所有已跟踪文件的改动暂存起来
+git stash push -m "my local changes"
+
+# 2. 拉上游
+git fetch upstream --tags
+
+# 3. 切到主分支（假设是 main）
+git checkout main
+
+# 4. 合并上游
+git merge upstream/main
+
+# 5. 恢复你的改动
+git stash pop
+```
