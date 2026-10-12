@@ -177,3 +177,32 @@ git merge upstream/main
 # 5. 恢复你的改动
 git stash pop
 ```
+
+## 常见数据库连接问题
+
+### 1. MySQL 装在 linux 宿主机上，怎么办
+
+解决方法：
+
+当 MySQL 装在 linux 宿主机上，应用跑在容器里时，在 yaml 文件里加：
+```yaml
+extra_hosts:
+      - "host.docker.internal:host-gateway"
+```
+然后连接 MySQL 时主机地址填 host.docker.internal。
+
+### 2. 主机地址填 host.docker.internal，仍然连不上
+
+错误信息：`Access denied for user 'xxxx'@'172.18.0.2'`
+
+原因：
+
+应用在容器里，MySQL 在宿主机上，它们不是一个进程，MySQL 把容器当成“外人”，必须专门开账号、授权、放行。MySQL装好之后，默认只有一个root，root通常只允许从localhost连。应用在容器里，从 MySQL 的角度看，它来自 172.18.0.x，不是 localhost。root@localhost 匹配不上，所以连不上。所以要建一个专门给容器用的账号，并给这个账号授权。
+
+解决方法：
+
+```sql
+CREATE USER IF NOT EXISTS '<用户名>'@'172.18.%' IDENTIFIED BY '<密码>';
+GRANT ALL PRIVILEGES ON `<用户名>`.* TO '<用户名>'@'172.18.%';
+FLUSH PRIVILEGES;
+```
