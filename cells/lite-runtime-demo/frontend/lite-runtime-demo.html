@@ -1,0 +1,42 @@
+<section class="ans-lrd-panel" data-ans-panel>
+  <header class="ans-lrd-header">
+    <div>
+      <span class="ans-lrd-eyebrow">LITE RUNTIME</span>
+      <h2>功能演示卡</h2>
+      <p>HTML、CSS、JS 分离加载，打开按钮查看交互。</p>
+    </div>
+    <button class="ans-lrd-close" type="button" aria-label="关闭卡片">×</button>
+  </header>
+
+  <div class="ans-lrd-content">
+    <section class="ans-lrd-card">
+      <div class="ans-lrd-stat">
+        <span>按钮点击次数</span>
+        <strong data-lrd-count aria-live="polite">0</strong>
+      </div>
+      <div class="ans-lrd-actions">
+        <button class="ans-lrd-button ans-lrd-button--primary" type="button" data-lrd-add>
+          点击 +1
+        </button>
+        <button class="ans-lrd-button" type="button" data-lrd-reset>重置</button>
+      </div>
+    </section>
+
+    <section class="ans-lrd-card">
+      <label class="ans-lrd-label" for="ans-lrd-input">面板 DOM 交互</label>
+      <div class="ans-lrd-input-row">
+        <input id="ans-lrd-input" data-lrd-input maxlength="60" value="你好，Answer！">
+        <button class="ans-lrd-button ans-lrd-button--primary" type="button" data-lrd-update>
+          更新文字
+        </button>
+      </div>
+      <p class="ans-lrd-preview" data-lrd-preview>你好，Answer！</p>
+    </section>
+
+    <footer class="ans-lrd-footer">
+      <span>生命周期：<strong data-lrd-status>等待打开</strong></span>
+      <span>遮罩：<strong data-lrd-overlay-state>未打开</strong></span>
+      <span>本页已打开 <strong data-lrd-opens>0</strong> 次</span>
+    </footer>
+  </div>
+</section>

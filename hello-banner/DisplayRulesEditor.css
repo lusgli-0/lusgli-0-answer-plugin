@@ -1,0 +1,53 @@
+/* 后台设置页里的「显示规则」卡片，跟主站 Bootstrap 表单排在一起。 */
+
+.hb-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 8px 0 12px;
+}
+
+.hb-rules__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+.hb-rule {
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--bs-body-bg, #fff);
+}
+
+.hb-rule__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.hb-rule__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px 12px;
+}
+
+.hb-rule__grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* 原 JSON 文本框仍参与提交，只是从视觉上让位给可视化编辑器。 */
+textarea.hb-rules-json {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}

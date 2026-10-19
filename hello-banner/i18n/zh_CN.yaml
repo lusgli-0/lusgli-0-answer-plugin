@@ -1,0 +1,27 @@
+# 中文文案。键路径必须和 translation.go、en_US.yaml 完全一致。
+plugin:
+  hello_banner:
+    backend:
+      info:
+        name:
+          other: 问候横幅
+        description:
+          other: 按当地时间显示问候语，并随机配一条语录
+      config:
+        greeting_slots:
+          title:
+            other: 问候时段
+          description:
+            other: JSON 数组。from 是小时 0–23，to 是 0–24（含 from 不含 to；24 表示当天结束）。按顺序匹配第一条；from>to 表示跨夜。from 与 to 相同无效。新增时段就往数组里加一项。
+        quotes:
+          title:
+            other: 语录
+          description:
+            other: 一行一条。每次打开页面随机抽一条显示在问候语旁边。
+        display_rules:
+          title:
+            other: 显示规则
+          description:
+            other: 限制横幅在指定时间段内的显示次数。可添加/删除规则（开始、结束、上限、每天或每 N 小时）。未配置则始终显示。支持跨天（22:00–02:00），时区为访客本地时区。合法性由前端检查。
+    frontend:
+      name: 问候横幅

@@ -1,0 +1,28 @@
+# 后台文案走 go-i18n 的 other；前端走 plugin.lite_runtime.frontend
+plugin:
+  lite_runtime:
+    backend:
+      info:
+        name:
+          other: lite-runtime
+        description:
+          other: >- 
+            Loads each cell's HTML/CSS/JS from the data directory, mounts it as an overlay, and manages its open/close lifecycle.
+            Once the plugin is installed, it is automatically enabled, and the answer management page cannot disable the plugin.
+      config:
+        cells_dir:
+          title:
+            other: Cell files directory (data volume)
+          description:
+            other: Each cell is in cells/{name}/. This is the lite-runtime directory mapped to /data by Docker.
+        usage:
+          title:
+            other: How to edit cells
+          description:
+            other: >-
+              Edit the html/css/js files under cells/{name}/ directly. Refresh the frontend to apply changes; no restart is needed.
+              Cell name = folder name under cells/. Delete the folder to remove a cell.
+              Open with data-ans-cell="name" or menu payload.cell_id.
+              Available capability: tilt on hover.
+    frontend:
+      name: lite-runtime

@@ -1,0 +1,375 @@
+html { background: #0b0c11; color-scheme: dark; }
+body { background-color: #0b0c11; }
+
+/* 1. 品牌主题色 */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+}
+.btn-primary:hover { opacity: .9; }
+
+/* 2. 导航栏毛玻璃 */
+.navbar {
+  background: rgba(15, 23, 42, .85) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* 3a. 首页中间列的问题卡：纯黑 · 不透明 · 厚实 */
+.page-main.overflow-x-hidden .list-group.rounded-0 {
+  background: transparent !important;
+  border: none !important;
+}
+
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action {
+  position: relative;
+  z-index: 1;
+  background-color: #0b0c11 !important;
+  color: #c8ccd4 !important;
+  border: 1px solid #252a36 !important;
+  border-radius: 12px !important;
+  margin: .55rem 0;
+  padding: 1.05em 1.2em;
+  box-shadow: 4px 4px 18px rgba(0, 0, 0, .35);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+/* 悬浮：本体向左上挪，露出后面两层 */
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action:hover {
+  transform: translate(-3px, -3px);
+  z-index: 3;
+  border-color: #6366f1 !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, .55);
+}
+
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action::before,
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action::before {
+  background: #151823;
+  border: 1px solid #2a3040;
+}
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action::after {
+  background: #10131b;
+  border: 1px solid #222735;
+}
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action:hover::before {
+  opacity: 1;
+  transform: translate(-3px, -3px);
+}
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action:hover::after {
+  opacity: 1;
+  transform: translate(-6px, -6px);
+}
+
+/* 标题 */
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action a.link-dark {
+  color: #e8ecf3 !important;
+  font-weight: 600;
+  text-decoration: none;
+}
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action a.link-dark:hover {
+  color: #a5b4fc !important;
+}
+
+/* 摘要与元信息 */
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action .text-body {
+  color: #b3b8c6 !important;
+}
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action .text-secondary {
+  color: #818896 !important;
+}
+
+/* 标签芯片 */
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action .question-tags a.badge-tag {
+  background: rgba(255, 255, 255, .06) !important;
+  color: #c3c8d4 !important;
+  border: 1px solid rgba(255, 255, 255, .12) !important;
+  border-radius: 4px !important;
+  font-family: Consolas, 'Noto Sans SC', monospace;
+  font-size: .8em;
+  padding: .12em .5em;
+  margin-right: .4em;
+}
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action .question-tags a.badge-tag:hover {
+  background: rgba(139, 92, 246, .18) !important;
+  color: #e2e0ff !important;
+}
+
+/* 键盘焦点 */
+.page-main.overflow-x-hidden .list-group .list-group-item.list-group-item-action:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+/* 3c. 侧边栏等通用卡片 */
+.card {
+  border-radius: 14px;
+}
+
+/* 4. 隐藏页脚品牌信息 */
+footer.bg-light { display: none; }
+
+/* 5. 自定义字体 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+body { font-family: 'Noto Sans SC', sans-serif; }
+
+/* 6. 引用块 */
+blockquote {
+  border-left: 3px solid #6366f1;
+  background: rgba(99,102,241,.06);
+  border-radius: 0 8px 8px 0;
+  padding: .6em 1em;
+}
+
+/* 7. 代码块 */
+pre {
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+}
+
+/* 8. 滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+
+/* 9. 选中文字 */
+::selection { background: #8b5cf6; color: #fff; }
+
+/* ============ 10. 侧边栏卡片：黑色终端面板 ============ */
+.page-right-side .card {
+  background-color: #0b0c11 !important;
+  border: 1px solid #252a36 !important;
+  border-radius: 12px;
+  box-shadow: 4px 4px 18px rgba(0, 0, 0, .35);
+}
+
+.page-right-side .card .card-header {
+  background: transparent;
+  border-bottom: 1px solid #252a36;
+  color: #e8ecf3;
+  font-family: Consolas, 'Noto Sans SC', monospace;
+  font-weight: 600;
+  font-size: .92em;
+  letter-spacing: .02em;
+  display: flex;
+  align-items: center;
+}
+.page-right-side .card .card-header::before {
+  content: '❯';
+  margin-right: .55em;
+  color: #8b5cf6;
+}
+.page-right-side .card:has(.card-header .btn-link) .card-header::before {
+  content: '❯';
+  margin-right: 0;
+}
+
+.page-right-side .card:has(.list-group-flush) .card-header::after {
+  content: '';
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  box-shadow: 0 0 10px #8b5cf6;
+  animation: sidebarDot 2s infinite;
+}
+@keyframes sidebarDot {
+  0%   { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+.page-right-side .card .card-body {
+  color: #c8ccd4;
+}
+.page-right-side .card .card-body .text-muted {
+  color: #818896 !important;
+}
+
+.page-right-side .card .btn-link {
+  color: #a5b4fc;
+  text-decoration: none;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: .85em;
+}
+.page-right-side .card .btn-link:hover {
+  color: #e2e0ff;
+}
+
+.page-right-side .card .btn-outline-primary {
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, .55);
+  background: rgba(99, 102, 241, .08);
+  border-radius: 6px;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: .85em;
+}
+.page-right-side .card .btn-outline-primary:hover {
+  background: rgba(139, 92, 246, .22);
+  border-color: #8b5cf6;
+  color: #e2e0ff;
+}
+
+.page-right-side .card .list-group-flush {
+  counter-reset: hotfile;
+  background: transparent !important;
+  border: none !important;
+  padding: .35rem 0 .45rem;
+}
+.page-right-side .card .list-group-flush .list-group-item {
+  position: relative;
+  z-index: 1;
+  background-color: #0b0c11 !important;
+  color: #c8ccd4;
+  border: 1px solid #252a36 !important;
+  border-radius: 8px;
+  margin: .35rem .6rem;
+  padding: .75em .9em .75em 2.5em;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.page-right-side .card .list-group-flush .list-group-item::before {
+  counter-increment: hotfile;
+  content: counter(hotfile, decimal-leading-zero);
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: Consolas, monospace;
+  font-size: .72em;
+  color: #8b5cf6;
+}
+.page-right-side .card .list-group-flush .list-group-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #10131b;
+  border: 1px solid #222735;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.page-right-side .card .list-group-flush .list-group-item:hover {
+  background-color: #0b0c11 !important;
+  transform: translate(-3px, -3px);
+  z-index: 3;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, .55);
+  border-color: #6366f1 !important;
+}
+.page-right-side .card .list-group-flush .list-group-item:hover::after {
+  opacity: 1;
+  transform: translate(-3px, -3px);
+}
+.page-right-side .card .list-group-flush .list-group-item:hover::before {
+  color: #a5b4fc;
+}
+.page-right-side .card .list-group-flush .list-group-item .link-dark {
+  color: #e8ecf3 !important;
+  font-weight: 600;
+  text-decoration: none;
+}
+.page-right-side .card .list-group-flush .list-group-item .link-secondary {
+  color: #818896 !important;
+}
+
+/* ============ 12. 标签页网格卡片 ============
+   用标签页真实的网格列类定位（不依赖 :has），
+   列类来自 Tags 页面组件：col-12 col-sm-6 col-md-4 col-lg-4 col-xl-3 */
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card {
+  position: relative;
+  z-index: 1;
+  background-color: #0b0c11 !important;
+  border: 1px solid #252a36 !important;
+  border-radius: 12px !important;
+  box-shadow: 4px 4px 18px rgba(0, 0, 0, .35);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+/* 悬浮：向左上叠一层 + 紫描边 */
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card:hover {
+  transform: translate(-3px, -3px);
+  z-index: 3;
+  border-color: #6366f1 !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, .55);
+}
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #10131b;
+  border: 1px solid #222735;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card:hover::after {
+  opacity: 1;
+  transform: translate(-3px, -3px);
+}
+
+/* 正文与描述 */
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card .card-body {
+  color: #c8ccd4;
+}
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card .card-body > .small {
+  color: #b3b8c6 !important;
+}
+
+/* 标签芯片（badge-tag 只出现在标签卡里，可直接按元素选） */
+.card .card-body > a.badge-tag {
+  background: rgba(255, 255, 255, .06) !important;
+  color: #c3c8d4 !important;
+  border: 1px solid rgba(255, 255, 255, .12) !important;
+  border-radius: 4px !important;
+  font-family: Consolas, 'Noto Sans SC', monospace;
+  font-size: .8em;
+  padding: .12em .5em;
+  text-decoration: none;
+}
+.card .card-body > a.badge-tag:hover {
+  background: rgba(139, 92, 246, .18) !important;
+  color: #e2e0ff !important;
+}
+
+/* 「关注」按钮 */
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card .btn-outline-primary {
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, .55);
+  background: rgba(99, 102, 241, .08);
+  border-radius: 6px;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: .85em;
+}
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card .btn-outline-primary:hover {
+  background: rgba(139, 92, 246, .22);
+  border-color: #8b5cf6;
+  color: #e2e0ff;
+}
+
+/* 问题计数 */
+.col-12.col-sm-6.col-md-4.col-lg-4.col-xl-3 .card .text-secondary {
+  color: #818896 !important;
+}
+/*临时在这去除display列表按钮*/
+.toolbar-item-wrap:has(.bi-list-ol),
+.toolbar-item-wrap:has(.bi-list-ul) {
+  display: none !important;
+}
+
+button.toolbar:has(.bi-list-ol),
+button.toolbar:has(.bi-list-ul) {
+  display: none !important;
+}
+

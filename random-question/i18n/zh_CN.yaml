@@ -1,0 +1,20 @@
+# 中文文案。answer build 会把 plugin: 整段合并进主站 i18n/zh_CN.yaml。
+# 键路径必须和 i18n/translation.go 里的常量一致。
+plugin:
+  random_question:
+    backend:
+      info:
+        name:
+          other: 随机问题
+        description:
+          other: 侧栏菜单触发本插件动作时，随机跳到一道问题
+      config:
+        page_size:
+          title:
+            other: 每页条数
+          description:
+            other: 拉问题列表时的 page_size。留空、填 0 或负数时按默认 20；超过 100 时按 100。
+          placeholder:
+            other: "20"
+    frontend:
+      name: 随机问题

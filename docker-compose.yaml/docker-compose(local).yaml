@@ -1,0 +1,36 @@
+# 本地源码部署answer
+services:
+  answer:
+    image: answer
+    build:
+      context: .
+    ports:
+      - "9080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
+    restart: always
+    volumes:
+      - answer-data:/data
+
+  db:
+    image: mysql:9.7
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    environment:
+      MYSQL_ROOT_PASSWORD:  
+      MYSQL_USER: answer
+      MYSQL_PASSWORD:  
+      MYSQL_DATABASE: answer
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -**** --silent"]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: always
+
+volumes:
+  answer-data:
+  db-data:

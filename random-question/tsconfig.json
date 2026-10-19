@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "plugin-shared": [
+        "../plugin-shared/src/index.ts",
+        "../plugin_shared/src/index.ts"
+      ]
+    },
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["@modyfi/vite-plugin-yaml/modules"]
+  },
+  "include": ["index.ts", "Component.tsx", "i18n"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
