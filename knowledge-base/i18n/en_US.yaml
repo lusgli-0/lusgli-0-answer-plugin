@@ -34,5 +34,13 @@ plugin:
           other: MySQL username
         password:
           other: MySQL password
+        host_placeholder:
+          other: 127.0.0.1
+        port_placeholder:
+          other: "3306"
+        database_placeholder:
+          other: knowledge_base
+        username_placeholder:
+          other: root
     frontend:
       hello_world: Hello World

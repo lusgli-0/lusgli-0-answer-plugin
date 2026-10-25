@@ -1,51 +1,72 @@
 import { FC, FormEvent } from 'react';
 
-import type { KnowledgeBase, KnowledgeBaseDocument } from '../types';
+import type {
+  KnowledgeBase,
+  KnowledgeBaseNote,
+  RequestState,
+} from '../types';
 
 type Props = {
+  // Knowledge base list
   knowledgeBases: KnowledgeBase[];
   selectedKnowledgeBase: KnowledgeBase | undefined;
-  documents: KnowledgeBaseDocument[];
-  selectedDocumentId: number | null;
-  loadingKnowledgeBases: boolean;
-  knowledgeBasesError: string;
-  loadingDocuments: boolean;
-  documentsError: string;
+  knowledgeBasesRequest: RequestState;
+
+  // Note list
+  notes: KnowledgeBaseNote[];
+  selectedNoteId: number | null;
+  notesRequest: RequestState;
+
+  // Search
+  knowledgeBaseSearchText: string;
+  noteSearchText: string;
+  knowledgeBaseSearchActive: boolean;
+
+  // Knowledge base creation
   newKnowledgeBaseTitle: string;
-  creatingKnowledgeBase: boolean;
-  createKnowledgeBaseError: string;
-  deletingKnowledgeBaseId: number | null;
-  deleteKnowledgeBaseError: string;
+  createKnowledgeBaseRequest: RequestState;
+
+  // Knowledge base deletion
+  deleteKnowledgeBaseRequest: RequestState & { id: number | null };
+
+  // Actions
   onKnowledgeBaseTitleChange: (title: string) => void;
   onCreateKnowledgeBase: (event: FormEvent<HTMLFormElement>) => void;
   onSelectKnowledgeBase: (id: number) => void;
   onBackToKnowledgeBases: () => void;
-  onSelectDocument: (id: number) => void;
-  onAddDocument: () => void;
+  onSelectNote: (id: number) => void;
+  onAddNote: () => void;
   onDeleteKnowledgeBase: (knowledgeBase: KnowledgeBase) => void;
+  onKnowledgeBaseSearchTextChange: (text: string) => void;
+  onNoteSearchTextChange: (text: string) => void;
+  onKnowledgeBaseSearch: (event: FormEvent<HTMLFormElement>) => void;
+  onNoteSearch: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 const KnowledgeBaseSidebar: FC<Props> = ({
   knowledgeBases,
   selectedKnowledgeBase,
-  documents,
-  selectedDocumentId,
-  loadingKnowledgeBases,
-  knowledgeBasesError,
-  loadingDocuments,
-  documentsError,
+  notes,
+  selectedNoteId,
+  knowledgeBasesRequest,
+  notesRequest,
+  knowledgeBaseSearchText,
+  noteSearchText,
+  knowledgeBaseSearchActive,
   newKnowledgeBaseTitle,
-  creatingKnowledgeBase,
-  createKnowledgeBaseError,
-  deletingKnowledgeBaseId,
-  deleteKnowledgeBaseError,
+  createKnowledgeBaseRequest,
+  deleteKnowledgeBaseRequest,
   onKnowledgeBaseTitleChange,
   onCreateKnowledgeBase,
   onSelectKnowledgeBase,
   onBackToKnowledgeBases,
-  onSelectDocument,
-  onAddDocument,
+  onSelectNote,
+  onAddNote,
   onDeleteKnowledgeBase,
+  onKnowledgeBaseSearchTextChange,
+  onNoteSearchTextChange,
+  onKnowledgeBaseSearch,
+  onNoteSearch,
 }) => (
   <aside className="knowledge-base-sidebar">
     <section className="kb-panel">
@@ -69,54 +90,71 @@ const KnowledgeBaseSidebar: FC<Props> = ({
               className="kb-icon-button kb-delete-button"
               type="button"
               onClick={() => onDeleteKnowledgeBase(selectedKnowledgeBase)}
-              disabled={deletingKnowledgeBaseId === selectedKnowledgeBase.id}
+              disabled={
+                deleteKnowledgeBaseRequest.id === selectedKnowledgeBase.id
+              }
             >
-              {deletingKnowledgeBaseId === selectedKnowledgeBase.id
+              {deleteKnowledgeBaseRequest.id === selectedKnowledgeBase.id
                 ? '删除中...'
                 : '删除知识库'}
             </button>
           </div>
-          {deleteKnowledgeBaseError && (
+          {deleteKnowledgeBaseRequest.error && (
             <p className="kb-message kb-message-error" role="alert">
-              {deleteKnowledgeBaseError}
+              {deleteKnowledgeBaseRequest.error}
             </p>
           )}
+          <form
+            className="kb-search-form kb-notes-search-form"
+            onSubmit={onNoteSearch}
+          >
+            <input
+              id="knowledge-base-search"
+              type="search"
+              aria-label="搜索当前知识库的笔记"
+              value={noteSearchText}
+              onChange={(event) =>
+                onNoteSearchTextChange(event.target.value)
+              }
+              placeholder="搜索当前知识库的笔记"
+            />
+          </form>
           <section className="kb-notes-sidebar">
             <div className="kb-list-heading">笔记</div>
-            {loadingDocuments ? (
+            {notesRequest.loading ? (
               <p className="kb-state">正在加载笔记...</p>
-            ) : documentsError ? (
+            ) : notesRequest.error ? (
               <p className="kb-message kb-message-error" role="alert">
-                {documentsError}
+                {notesRequest.error}
               </p>
-            ) : documents.length === 0 ? (
+            ) : notes.length === 0 ? (
               <p className="kb-state">这个知识库还没有笔记。</p>
             ) : (
               <ul className="kb-list kb-note-list">
-                {documents.map((document) => (
+                {notes.map((note) => (
                   <li
                     className={`kb-list-item${
-                      selectedDocumentId === document.id ? ' is-selected' : ''
+                      selectedNoteId === note.id ? ' is-selected' : ''
                     }`}
-                    key={document.id}
+                    key={note.id}
                   >
                     <button
                       className="kb-select-button"
                       type="button"
-                      aria-pressed={selectedDocumentId === document.id}
-                      onClick={() => onSelectDocument(document.id)}
+                      aria-pressed={selectedNoteId === note.id}
+                      onClick={() => onSelectNote(note.id)}
                     >
-                      <span className="kb-list-title">{document.title}</span>
+                      <span className="kb-list-title">{note.title}</span>
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-            {!loadingDocuments && !documentsError && (
+            {!notesRequest.loading && !notesRequest.error && (
               <button
                 className="kb-button kb-button-primary kb-add-note-button"
                 type="button"
-                onClick={onAddDocument}
+                onClick={onAddNote}
               >
                 添加笔记
               </button>
@@ -132,42 +170,32 @@ const KnowledgeBaseSidebar: FC<Props> = ({
             </div>
           </div>
 
-          <form className="kb-create-form" onSubmit={onCreateKnowledgeBase}>
-            <label htmlFor="knowledge-base-title">新建知识库</label>
+          <form className="kb-search-form" onSubmit={onKnowledgeBaseSearch}>
             <input
-              id="knowledge-base-title"
-              name="title"
-              type="text"
-              value={newKnowledgeBaseTitle}
+              id="knowledge-base-search"
+              type="search"
+              aria-label="搜索知识库"
+              value={knowledgeBaseSearchText}
               onChange={(event) =>
-                onKnowledgeBaseTitleChange(event.target.value)
+                onKnowledgeBaseSearchTextChange(event.target.value)
               }
-              placeholder="例如：产品文档"
-              maxLength={255}
+              placeholder="搜索知识库"
             />
-            <button
-              className="kb-button kb-button-primary"
-              type="submit"
-              disabled={creatingKnowledgeBase}
-            >
-              {creatingKnowledgeBase ? '创建中...' : '创建知识库'}
-            </button>
-            {createKnowledgeBaseError && (
-              <p className="kb-message kb-message-error" role="alert">
-                {createKnowledgeBaseError}
-              </p>
-            )}
           </form>
 
           <div className="kb-list-heading">知识库列表</div>
-          {loadingKnowledgeBases ? (
+          {knowledgeBasesRequest.loading ? (
             <p className="kb-state">正在加载知识库...</p>
-          ) : knowledgeBasesError ? (
+          ) : knowledgeBasesRequest.error ? (
             <p className="kb-message kb-message-error" role="alert">
-              {knowledgeBasesError}
+              {knowledgeBasesRequest.error}
             </p>
           ) : knowledgeBases.length === 0 ? (
-            <p className="kb-state">还没有知识库，创建一个开始整理内容。</p>
+            <p className="kb-state">
+              {knowledgeBaseSearchActive
+                ? '没有找到匹配的知识库。'
+                : '还没有知识库。'}
+            </p>
           ) : (
             <ul className="kb-list">
               {knowledgeBases.map((knowledgeBase) => (
@@ -186,9 +214,11 @@ const KnowledgeBaseSidebar: FC<Props> = ({
                     type="button"
                     aria-label={`删除知识库 ${knowledgeBase.title}`}
                     onClick={() => onDeleteKnowledgeBase(knowledgeBase)}
-                    disabled={deletingKnowledgeBaseId === knowledgeBase.id}
+                    disabled={
+                      deleteKnowledgeBaseRequest.id === knowledgeBase.id
+                    }
                   >
-                    {deletingKnowledgeBaseId === knowledgeBase.id
+                    {deleteKnowledgeBaseRequest.id === knowledgeBase.id
                       ? '…'
                       : '删除'}
                   </button>
@@ -197,9 +227,36 @@ const KnowledgeBaseSidebar: FC<Props> = ({
             </ul>
           )}
 
-          {deleteKnowledgeBaseError && (
+          <form className="kb-create-form" onSubmit={onCreateKnowledgeBase}>
+            <label htmlFor="knowledge-base-title">新建知识库</label>
+            <input
+              id="knowledge-base-title"
+              name="title"
+              type="text"
+              value={newKnowledgeBaseTitle}
+              onChange={(event) =>
+                onKnowledgeBaseTitleChange(event.target.value)
+              }
+              placeholder="例如：产品文档"
+              maxLength={255}
+            />
+            <button
+              className="kb-button kb-button-primary"
+              type="submit"
+              disabled={createKnowledgeBaseRequest.loading}
+            >
+              {createKnowledgeBaseRequest.loading ? '创建中...' : '创建知识库'}
+            </button>
+            {createKnowledgeBaseRequest.error && (
+              <p className="kb-message kb-message-error" role="alert">
+                {createKnowledgeBaseRequest.error}
+              </p>
+            )}
+          </form>
+
+          {deleteKnowledgeBaseRequest.error && (
             <p className="kb-message kb-message-error" role="alert">
-              {deleteKnowledgeBaseError}
+              {deleteKnowledgeBaseRequest.error}
             </p>
           )}
         </>

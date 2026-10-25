@@ -57,7 +57,7 @@ type KnowledgeBase struct {
 	UpdatedAt time.Time `xorm:"updated" json:"updated_at"`
 }
 
-type KnowledgeBaseDocument struct {
+type KnowledgeBaseNote struct {
 	ID              int64     `xorm:"'id' pk autoincr" json:"id"`
 	KnowledgeBaseID int64     `xorm:"'knowledge_base_id' notnull index" json:"knowledge_base_id"`
 	Title           string    `xorm:"varchar(255) notnull" json:"title"`
@@ -70,8 +70,8 @@ func (KnowledgeBase) TableName() string {
 	return "kb_info"
 }
 
-func (KnowledgeBaseDocument) TableName() string {
-	return "kb_document"
+func (KnowledgeBaseNote) TableName() string {
+	return "kb_note"
 }
 
 func init() {
@@ -95,36 +95,44 @@ func (d KnowledgeBasePlugin) Info() plugin.Info {
 func (p *KnowledgeBasePlugin) ConfigFields() []plugin.ConfigField {
 	return []plugin.ConfigField{
 		{
-			Name:      "host",
-			Type:      plugin.ConfigTypeInput,
-			Title:     plugin.MakeTranslator(i18n.InfoHost),
-			Required:  true,
-			Value:     "127.0.0.1",
-			UIOptions: plugin.ConfigFieldUIOptions{InputType: plugin.InputTypeText},
+			Name:     "host",
+			Type:     plugin.ConfigTypeInput,
+			Title:    plugin.MakeTranslator(i18n.InfoHost),
+			Required: true,
+			UIOptions: plugin.ConfigFieldUIOptions{
+				InputType:   plugin.InputTypeText,
+				Placeholder: plugin.MakeTranslator(i18n.InfoHostPlaceholder),
+			},
 		},
 		{
-			Name:      "port",
-			Type:      plugin.ConfigTypeInput,
-			Title:     plugin.MakeTranslator(i18n.InfoPort),
-			Required:  true,
-			Value:     "3306",
-			UIOptions: plugin.ConfigFieldUIOptions{InputType: plugin.InputTypeText},
+			Name:     "port",
+			Type:     plugin.ConfigTypeInput,
+			Title:    plugin.MakeTranslator(i18n.InfoPort),
+			Required: true,
+			UIOptions: plugin.ConfigFieldUIOptions{
+				InputType:   plugin.InputTypeText,
+				Placeholder: plugin.MakeTranslator(i18n.InfoPortPlaceholder),
+			},
 		},
 		{
-			Name:      "database",
-			Type:      plugin.ConfigTypeInput,
-			Title:     plugin.MakeTranslator(i18n.InfoDatabase),
-			Required:  true,
-			Value:     "knowledge_base",
-			UIOptions: plugin.ConfigFieldUIOptions{InputType: plugin.InputTypeText},
+			Name:     "database",
+			Type:     plugin.ConfigTypeInput,
+			Title:    plugin.MakeTranslator(i18n.InfoDatabase),
+			Required: true,
+			UIOptions: plugin.ConfigFieldUIOptions{
+				InputType:   plugin.InputTypeText,
+				Placeholder: plugin.MakeTranslator(i18n.InfoDatabasePlaceholder),
+			},
 		},
 		{
-			Name:      "username",
-			Type:      plugin.ConfigTypeInput,
-			Title:     plugin.MakeTranslator(i18n.InfoUsername),
-			Required:  true,
-			Value:     "root",
-			UIOptions: plugin.ConfigFieldUIOptions{InputType: plugin.InputTypeText},
+			Name:     "username",
+			Type:     plugin.ConfigTypeInput,
+			Title:    plugin.MakeTranslator(i18n.InfoUsername),
+			Required: true,
+			UIOptions: plugin.ConfigFieldUIOptions{
+				InputType:   plugin.InputTypeText,
+				Placeholder: plugin.MakeTranslator(i18n.InfoUsernamePlaceholder),
+			},
 		},
 		{
 			Name:      "password",
@@ -140,11 +148,11 @@ func (p *KnowledgeBasePlugin) RegisterUnAuthRouter(r *gin.RouterGroup) {
 	r.GET("/knowledge-base/health", p.health)
 	r.POST("/knowledge-base", p.createKnowledgeBase)
 	r.GET("/knowledge-base", p.listKnowledgeBase)
-	r.POST("/knowledge-base/:id/documents", p.createDocument)
-	r.GET("/knowledge-base/:id/documents", p.listDocuments)
-	r.PUT("/knowledge-base/:id/documents/:doc_id", p.updateDocument)
+	r.POST("/knowledge-base/:id/notes", p.createNote)
+	r.GET("/knowledge-base/:id/notes", p.listNotes)
+	r.PUT("/knowledge-base/:id/notes/:note_id", p.updateNote)
 	r.DELETE("/knowledge-base/:id", p.deleteKnowledgeBase)
-	r.DELETE("/knowledge-base/:id/documents/:doc_id", p.deleteDocument)
+	r.DELETE("/knowledge-base/:id/notes/:note_id", p.deleteNote)
 }
 
 func (p *KnowledgeBasePlugin) RegisterAuthUserRouter(r *gin.RouterGroup) {}
@@ -190,7 +198,14 @@ func (p *KnowledgeBasePlugin) createKnowledgeBase(ctx *gin.Context) {
 
 func (p *KnowledgeBasePlugin) listKnowledgeBase(ctx *gin.Context) {
 	items := make([]KnowledgeBase, 0)
-	if err := p.db.Desc("updated_at").Find(&items); err != nil {
+
+	session := p.db.NewSession()
+	defer session.Close()
+	if q := strings.TrimSpace(ctx.Query("q")); q != "" {
+		session = session.Where("title LIKE ?", "%"+q+"%")
+	}
+
+	if err := session.Desc("updated_at").Find(&items); err != nil {
 		ctx.JSON(500, gin.H{"error": "failed to list knowledge bases"})
 		return
 	}
@@ -200,7 +215,7 @@ func (p *KnowledgeBasePlugin) listKnowledgeBase(ctx *gin.Context) {
 	})
 }
 
-// 一组辅助函数，用于检查知识库和文档 ID 是否存在。
+// 一组辅助函数，用于检查知识库和笔记 ID 是否存在。
 func (p *KnowledgeBasePlugin) checkKBIDExists(ctx *gin.Context, kbID int64) bool {
 	exists, err := p.db.ID(kbID).Exist(&KnowledgeBase{})
 	if err != nil {
@@ -214,14 +229,14 @@ func (p *KnowledgeBasePlugin) checkKBIDExists(ctx *gin.Context, kbID int64) bool
 	return true
 }
 
-func (p *KnowledgeBasePlugin) checkDocIDExists(ctx *gin.Context, kbID, docID int64) bool {
-	exists, err := p.db.ID(docID).Get(&KnowledgeBaseDocument{KnowledgeBaseID: kbID})
+func (p *KnowledgeBasePlugin) checkNoteIDExists(ctx *gin.Context, kbID, noteID int64) bool {
+	exists, err := p.db.ID(noteID).Get(&KnowledgeBaseNote{KnowledgeBaseID: kbID})
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "failed to check document"})
+		ctx.JSON(500, gin.H{"error": "failed to check note"})
 		return false
 	}
 	if !exists {
-		ctx.JSON(404, gin.H{"error": "document not found"})
+		ctx.JSON(404, gin.H{"error": "note not found"})
 		return false
 	}
 	return true
@@ -244,20 +259,20 @@ func (p *KnowledgeBasePlugin) getKnowledgeBaseID(ctx *gin.Context) (int64, bool)
 	return kbID, true
 }
 
-func (p *KnowledgeBasePlugin) getKnowledgeBaseDocumentIDs(ctx *gin.Context) (int64, int64, bool) {
+func (p *KnowledgeBasePlugin) getKnowledgeBaseNoteIDs(ctx *gin.Context) (int64, int64, bool) {
 	kbID, ok := p.getKnowledgeBaseID(ctx)
 	if !ok {
 		return 0, 0, false
 	}
 
-	docID, ok := parsePositivePathID(ctx, "doc_id", "document")
-	if !ok || !p.checkDocIDExists(ctx, kbID, docID) {
+	noteID, ok := parsePositivePathID(ctx, "note_id", "note")
+	if !ok || !p.checkNoteIDExists(ctx, kbID, noteID) {
 		return 0, 0, false
 	}
-	return kbID, docID, true
+	return kbID, noteID, true
 }
 
-func (p *KnowledgeBasePlugin) createDocument(ctx *gin.Context) {
+func (p *KnowledgeBasePlugin) createNote(ctx *gin.Context) {
 	kbID, ok := p.getKnowledgeBaseID(ctx)
 	if !ok {
 		return
@@ -277,35 +292,41 @@ func (p *KnowledgeBasePlugin) createDocument(ctx *gin.Context) {
 		return
 	}
 
-	doc := KnowledgeBaseDocument{
+	note := KnowledgeBaseNote{
 		KnowledgeBaseID: kbID,
 		Title:           req.Title,
 		Content:         req.Content,
 	}
-	if _, err := p.db.Insert(&doc); err != nil {
-		ctx.JSON(500, gin.H{"error": "failed to create document"})
+	if _, err := p.db.Insert(&note); err != nil {
+		ctx.JSON(500, gin.H{"error": "failed to create note"})
 		return
 	}
 
-	ctx.JSON(201, doc)
+	ctx.JSON(201, note)
 }
 
-func (p *KnowledgeBasePlugin) listDocuments(ctx *gin.Context) {
+func (p *KnowledgeBasePlugin) listNotes(ctx *gin.Context) {
 	kbID, ok := p.getKnowledgeBaseID(ctx)
 	if !ok {
 		return
 	}
 
-	docs := make([]KnowledgeBaseDocument, 0)
-	if err := p.db.Where("knowledge_base_id = ?", kbID).Desc("updated_at").Find(&docs); err != nil {
-		ctx.JSON(500, gin.H{"error": "failed to list documents"})
+	session := p.db.Where("knowledge_base_id = ?", kbID)
+	defer session.Close()
+	if q := strings.TrimSpace(ctx.Query("q")); q != "" {
+		session = session.Where("title LIKE ? OR content LIKE ?", "%"+q+"%", "%"+q+"%")
+	}
+
+	notes := make([]KnowledgeBaseNote, 0)
+	if err := session.Desc("updated_at").Find(&notes); err != nil {
+		ctx.JSON(500, gin.H{"error": "failed to list notes"})
 		return
 	}
-	ctx.JSON(200, gin.H{"items": docs})
+	ctx.JSON(200, gin.H{"items": notes})
 }
 
-func (p *KnowledgeBasePlugin) updateDocument(ctx *gin.Context) {
-	_, docID, ok := p.getKnowledgeBaseDocumentIDs(ctx)
+func (p *KnowledgeBasePlugin) updateNote(ctx *gin.Context) {
+	_, noteID, ok := p.getKnowledgeBaseNoteIDs(ctx)
 	if !ok {
 		return
 	}
@@ -323,31 +344,31 @@ func (p *KnowledgeBasePlugin) updateDocument(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"error": "title and content cannot be empty"})
 		return
 	}
-	doc := KnowledgeBaseDocument{
+	note := KnowledgeBaseNote{
 		Title:   req.Title,
 		Content: req.Content,
 	}
-	if _, err := p.db.ID(docID).
+	if _, err := p.db.ID(noteID).
 		Cols("title", "content", "updated_at").
-		Update(&doc); err != nil {
-		ctx.JSON(500, gin.H{"error": "failed to update document"})
+		Update(&note); err != nil {
+		ctx.JSON(500, gin.H{"error": "failed to update note"})
 		return
 	}
-	ctx.JSON(200, doc)
+	ctx.JSON(200, note)
 }
 
-func (p *KnowledgeBasePlugin) deleteDocument(ctx *gin.Context) {
-	kbID, docID, ok := p.getKnowledgeBaseDocumentIDs(ctx)
+func (p *KnowledgeBasePlugin) deleteNote(ctx *gin.Context) {
+	kbID, noteID, ok := p.getKnowledgeBaseNoteIDs(ctx)
 	if !ok {
 		return
 	}
-	if _, err := p.db.ID(docID).
+	if _, err := p.db.ID(noteID).
 		Where("knowledge_base_id = ?", kbID).
-		Delete(&KnowledgeBaseDocument{}); err != nil {
-		ctx.JSON(500, gin.H{"error": "failed to delete document"})
+		Delete(&KnowledgeBaseNote{}); err != nil {
+		ctx.JSON(500, gin.H{"error": "failed to delete note"})
 		return
 	}
-	ctx.JSON(200, gin.H{"message": "document deleted"})
+	ctx.JSON(200, gin.H{"message": "note deleted"})
 }
 
 func (p *KnowledgeBasePlugin) deleteKnowledgeBase(ctx *gin.Context) {
@@ -360,9 +381,9 @@ func (p *KnowledgeBasePlugin) deleteKnowledgeBase(ctx *gin.Context) {
 	defer session.Close()
 
 	if _, err := session.Where("knowledge_base_id = ?", kbID).
-		Delete(&KnowledgeBaseDocument{}); err != nil {
+		Delete(&KnowledgeBaseNote{}); err != nil {
 		_ = session.Rollback()
-		ctx.JSON(500, gin.H{"error": "failed to delete knowledge base documents"})
+		ctx.JSON(500, gin.H{"error": "failed to delete knowledge base notes"})
 		return
 	}
 	if _, err := session.ID(kbID).Delete(&KnowledgeBase{}); err != nil {
@@ -375,7 +396,7 @@ func (p *KnowledgeBasePlugin) deleteKnowledgeBase(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": "failed to commit transaction"})
 		return
 	}
-	ctx.JSON(200, gin.H{"message": "knowledge base and its documents deleted"})
+	ctx.JSON(200, gin.H{"message": "knowledge base and its notes deleted"})
 }
 
 func (p *KnowledgeBasePlugin) ConfigReceiver(config []byte) error {
@@ -405,7 +426,7 @@ func (p *KnowledgeBasePlugin) ConfigReceiver(config []byte) error {
 		p.db = db
 	}
 
-	if err := p.db.Sync2(new(KnowledgeBase), new(KnowledgeBaseDocument)); err != nil {
+	if err := p.db.Sync2(new(KnowledgeBase), new(KnowledgeBaseNote)); err != nil {
 		_ = p.db.Close()
 		return err
 	}

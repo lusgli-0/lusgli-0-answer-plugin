@@ -22,26 +22,27 @@ import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import {
-  createDocument,
   createKnowledgeBase,
-  deleteDocument,
+  createNote,
   deleteKnowledgeBase,
-  listDocuments,
+  deleteNote,
   listKnowledgeBases,
-  updateDocument,
+  listNotes,
+  updateNote,
 } from './api';
-import DocumentDetail from './components/DocumentDetail';
-import DocumentForm from './components/DocumentForm';
+import NoteDetail from './components/NoteDetail';
+import NoteForm from './components/NoteForm';
 import KnowledgeBaseSidebar from './components/KnowledgeBaseSidebar';
 import type {
-  DocumentPanel,
   KnowledgeBase,
-  KnowledgeBaseDocument,
+  KnowledgeBaseNote,
+  NotePanel,
+  RequestState,
 } from './types';
 import './Component.css';
 
 type ViewTransitionHandle = { finished?: Promise<void> };
-type ViewTransitionDocument = Document & {
+type ViewTransitionTarget = Document & {
   startViewTransition?: (callback: () => void) => ViewTransitionHandle;
 };
 
@@ -51,20 +52,20 @@ type ViewTransitionDocument = Document & {
  * 此时由 CSS 里的 kb-panel-in / kb-fade-in 兜底。
  */
 const withCrossFade = (update: () => void) => {
-  const viewTransitionDocument = document as ViewTransitionDocument;
+  const viewTransitionTarget = document as ViewTransitionTarget;
   const prefersReducedMotion = window.matchMedia(
     '(prefers-reduced-motion: reduce)',
   ).matches;
 
   if (
-    typeof viewTransitionDocument.startViewTransition !== 'function' ||
+    typeof viewTransitionTarget.startViewTransition !== 'function' ||
     prefersReducedMotion
   ) {
     update();
     return;
   }
 
-  viewTransitionDocument.startViewTransition(() => {
+  viewTransitionTarget.startViewTransition(() => {
     flushSync(update);
   });
 };
@@ -75,34 +76,56 @@ const Component: FC = () => {
   });
 
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
-  const [loadingKnowledgeBases, setLoadingKnowledgeBases] = useState(true);
-  const [knowledgeBasesError, setKnowledgeBasesError] = useState('');
+  const [knowledgeBasesRequest, setKnowledgeBasesRequest] =
+    useState<RequestState>({
+      loading: true,
+      error: '',
+    });
   const [newKnowledgeBaseTitle, setNewKnowledgeBaseTitle] = useState('');
-  const [creatingKnowledgeBase, setCreatingKnowledgeBase] = useState(false);
-  const [createKnowledgeBaseError, setCreateKnowledgeBaseError] = useState('');
-  const [deletingKnowledgeBaseId, setDeletingKnowledgeBaseId] = useState<
-    number | null
-  >(null);
-  const [deleteKnowledgeBaseError, setDeleteKnowledgeBaseError] = useState('');
+  const [createKnowledgeBaseRequest, setCreateKnowledgeBaseRequest] =
+    useState<RequestState>({ loading: false, error: '' });
+  const [deleteKnowledgeBaseRequest, setDeleteKnowledgeBaseRequest] = useState<
+    RequestState & { id: number | null }
+  >({ loading: false, error: '', id: null });
 
   const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<
     number | null
   >(null);
-  const [documents, setDocuments] = useState<KnowledgeBaseDocument[]>([]);
-  const [loadingDocuments, setLoadingDocuments] = useState(false);
-  const [documentsError, setDocumentsError] = useState('');
-  const [panel, setPanel] = useState<DocumentPanel>({ type: 'empty' });
+  const [notes, setNotes] = useState<KnowledgeBaseNote[]>([]);
+  const [notesRequest, setNotesRequest] = useState<RequestState>({
+    loading: false,
+    error: '',
+  });
+  const [panel, setPanel] = useState<NotePanel>({ type: 'empty' });
 
-  const [savingDocument, setSavingDocument] = useState(false);
-  const [saveDocumentError, setSaveDocumentError] = useState('');
-  const [deletingDocumentId, setDeletingDocumentId] = useState<number | null>(
-    null,
+  const [saveNoteRequest, setSaveNoteRequest] = useState<RequestState>(
+    { loading: false, error: '' },
   );
-  const [deleteDocumentError, setDeleteDocumentError] = useState('');
+  const [deleteNoteRequest, setDeleteNoteRequest] = useState<
+    RequestState & { id: number | null }
+  >({ loading: false, error: '', id: null });
+
+  const [knowledgeBaseSearchText, setKnowledgeBaseSearchText] = useState('');
+  const [submittedKnowledgeBaseSearchText, setSubmittedKnowledgeBaseSearchText] =
+    useState('');
+  const [noteSearchText, setNoteSearchText] = useState('');
+  const [submittedNoteSearchText, setSubmittedNoteSearchText] =
+    useState('');
+
+  const handleKnowledgeBaseSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmittedKnowledgeBaseSearchText(knowledgeBaseSearchText.trim());
+  };
+
+  const handleNoteSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmittedNoteSearchText(noteSearchText.trim());
+  };
 
   useEffect(() => {
     let cancelled = false;
-    listKnowledgeBases()
+    setKnowledgeBasesRequest({ loading: true, error: '' });
+    listKnowledgeBases(submittedKnowledgeBaseSearchText)
       .then((result) => {
         if (!cancelled) {
           setKnowledgeBases(result.data.items);
@@ -111,54 +134,64 @@ const Component: FC = () => {
       .catch((error: unknown) => {
         console.error('Failed to load knowledge bases:', error);
         if (!cancelled) {
-          setKnowledgeBasesError('加载知识库失败，请检查网络或稍后重试。');
+          setKnowledgeBasesRequest((previous) => ({
+            ...previous,
+            error: '加载知识库失败，请检查网络或稍后重试。',
+          }));
         }
       })
       .finally(() => {
         if (!cancelled) {
-          setLoadingKnowledgeBases(false);
+          setKnowledgeBasesRequest((previous) => ({
+            ...previous,
+            loading: false,
+          }));
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [submittedKnowledgeBaseSearchText]);
 
   useEffect(() => {
     if (selectedKnowledgeBaseId === null) {
-      setDocuments([]);
-      setLoadingDocuments(false);
-      setDocumentsError('');
+      setNotes([]);
+      setNotesRequest({ loading: false, error: '' });
       return;
     }
 
     let cancelled = false;
-    setLoadingDocuments(true);
-    setDocumentsError('');
+    setNotesRequest({ loading: true, error: '' });
     setPanel({ type: 'empty' });
-    listDocuments(selectedKnowledgeBaseId)
+    listNotes(selectedKnowledgeBaseId, submittedNoteSearchText)
       .then((result) => {
         if (!cancelled) {
-          setDocuments(result.items);
+          setNotes(result.items);
         }
       })
       .catch((error: unknown) => {
-        console.error('Failed to load documents:', error);
+        console.error('Failed to load notes:', error);
         if (!cancelled) {
-          setDocumentsError('加载笔记失败，请稍后重试。');
+          setNotesRequest((previous) => ({
+            ...previous,
+            error: '加载笔记失败，请稍后重试。',
+          }));
         }
       })
       .finally(() => {
         if (!cancelled) {
-          setLoadingDocuments(false);
+          setNotesRequest((previous) => ({
+            ...previous,
+            loading: false,
+          }));
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [selectedKnowledgeBaseId]);
+  }, [selectedKnowledgeBaseId, submittedNoteSearchText]);
 
   const handleCreateKnowledgeBase = async (
     event: FormEvent<HTMLFormElement>,
@@ -166,12 +199,14 @@ const Component: FC = () => {
     event.preventDefault();
     const title = newKnowledgeBaseTitle.trim();
     if (!title) {
-      setCreateKnowledgeBaseError('知识库名称不能为空。');
+      setCreateKnowledgeBaseRequest((previous) => ({
+        ...previous,
+        error: '知识库名称不能为空。',
+      }));
       return;
     }
 
-    setCreatingKnowledgeBase(true);
-    setCreateKnowledgeBaseError('');
+    setCreateKnowledgeBaseRequest({ loading: true, error: '' });
     try {
       const created = await createKnowledgeBase(title);
       withCrossFade(() => {
@@ -181,9 +216,15 @@ const Component: FC = () => {
       });
     } catch (error: unknown) {
       console.error('Failed to create knowledge base:', error);
-      setCreateKnowledgeBaseError('创建知识库失败，请检查网络后重试。');
+      setCreateKnowledgeBaseRequest((previous) => ({
+        ...previous,
+        error: '创建知识库失败，请检查网络后重试。',
+      }));
     } finally {
-      setCreatingKnowledgeBase(false);
+      setCreateKnowledgeBaseRequest((previous) => ({
+        ...previous,
+        loading: false,
+      }));
     }
   };
 
@@ -191,9 +232,8 @@ const Component: FC = () => {
     if (selectedKnowledgeBaseId === id) return;
     withCrossFade(() => {
       setPanel({ type: 'empty' });
-      setDocuments([]);
-      setDocumentsError('');
-      setLoadingDocuments(true);
+      setNotes([]);
+      setNotesRequest({ loading: true, error: '' });
       setSelectedKnowledgeBaseId(id);
     });
   };
@@ -201,47 +241,61 @@ const Component: FC = () => {
   const handleBackToKnowledgeBases = () => {
     withCrossFade(() => {
       setSelectedKnowledgeBaseId(null);
-      setDocuments([]);
+      setNotes([]);
       setPanel({ type: 'empty' });
-      setDeleteKnowledgeBaseError('');
+      setDeleteKnowledgeBaseRequest((previous) => ({
+        ...previous,
+        error: '',
+      }));
     });
   };
 
-  const handleSelectDocument = (documentId: number) => {
+  const handleSelectNote = (noteId: number) => {
     withCrossFade(() => {
-      setPanel({ type: 'detail', documentId });
-      setDeleteDocumentError('');
+      setPanel({ type: 'detail', noteId });
+      setDeleteNoteRequest((previous) => ({
+        ...previous,
+        error: '',
+      }));
     });
   };
 
-  const handleCreateDocument = async (title: string, content: string) => {
+  const handleCreateNote = async (title: string, content: string) => {
     if (selectedKnowledgeBaseId === null) {
-      setSaveDocumentError('请先选择一个知识库。');
+      setSaveNoteRequest((previous) => ({
+        ...previous,
+        error: '请先选择一个知识库。',
+      }));
       return;
     }
 
-    setSavingDocument(true);
-    setSaveDocumentError('');
+    setSaveNoteRequest({ loading: true, error: '' });
     try {
-      const created = await createDocument(
+      const created = await createNote(
         selectedKnowledgeBaseId,
         title,
         content,
       );
       withCrossFade(() => {
-        setDocuments((previous) => [created, ...previous]);
-        setPanel({ type: 'detail', documentId: created.id });
+        setNotes((previous) => [created, ...previous]);
+        setPanel({ type: 'detail', noteId: created.id });
       });
     } catch (error: unknown) {
-      console.error('Failed to create document:', error);
-      setSaveDocumentError('保存笔记失败，请检查连接后重试。');
+      console.error('Failed to create note:', error);
+      setSaveNoteRequest((previous) => ({
+        ...previous,
+        error: '保存笔记失败，请检查连接后重试。',
+      }));
     } finally {
-      setSavingDocument(false);
+      setSaveNoteRequest((previous) => ({
+        ...previous,
+        loading: false,
+      }));
     }
   };
 
-  const handleUpdateDocument = async (
-    documentId: number,
+  const handleUpdateNote = async (
+    noteId: number,
     title: string,
     content: string,
   ) => {
@@ -249,65 +303,80 @@ const Component: FC = () => {
       return;
     }
 
-    setSavingDocument(true);
-    setSaveDocumentError('');
+    setSaveNoteRequest({ loading: true, error: '' });
     try {
-      const updated = await updateDocument(
+      const updated = await updateNote(
         selectedKnowledgeBaseId,
-        documentId,
+        noteId,
         title,
         content,
       );
       withCrossFade(() => {
-        setDocuments((previous) =>
-          previous.map((document) =>
-            document.id === documentId
+        setNotes((previous) =>
+          previous.map((note) =>
+            note.id === noteId
               ? {
-                  ...document,
+                  ...note,
                   ...updated,
-                  id: document.id,
-                  knowledge_base_id: document.knowledge_base_id,
-                  created_at: document.created_at,
-                  updated_at: updated.updated_at || document.updated_at,
+                  id: note.id,
+                  knowledge_base_id: note.knowledge_base_id,
+                  created_at: note.created_at,
+                  updated_at: updated.updated_at || note.updated_at,
                 }
-              : document,
+              : note,
           ),
         );
-        setPanel({ type: 'detail', documentId });
+        setPanel({ type: 'detail', noteId });
       });
     } catch (error: unknown) {
-      console.error('Failed to update document:', error);
-      setSaveDocumentError('保存修改失败，请稍后重试。');
+      console.error('Failed to update note:', error);
+      setSaveNoteRequest((previous) => ({
+        ...previous,
+        error: '保存修改失败，请稍后重试。',
+      }));
     } finally {
-      setSavingDocument(false);
+      setSaveNoteRequest((previous) => ({
+        ...previous,
+        loading: false,
+      }));
     }
   };
 
-  const handleDeleteDocument = async (document: KnowledgeBaseDocument) => {
+  const handleDeleteNote = async (note: KnowledgeBaseNote) => {
     if (selectedKnowledgeBaseId === null) {
       return;
     }
-    if (!window.confirm(`确定删除笔记“${document.title}”吗？`)) {
+    if (!window.confirm(`确定删除笔记“${note.title}”吗？`)) {
       return;
     }
 
-    setDeletingDocumentId(document.id);
-    setDeleteDocumentError('');
+    setDeleteNoteRequest({
+      loading: true,
+      error: '',
+      id: note.id,
+    });
     try {
-      await deleteDocument(selectedKnowledgeBaseId, document.id);
+      await deleteNote(selectedKnowledgeBaseId, note.id);
       withCrossFade(() => {
-        setDocuments((previous) =>
-          previous.filter((item) => item.id !== document.id),
+        setNotes((previous) =>
+          previous.filter((item) => item.id !== note.id),
         );
-        if (panel.type === 'detail' && panel.documentId === document.id) {
+        if (panel.type === 'detail' && panel.noteId === note.id) {
           setPanel({ type: 'empty' });
         }
       });
     } catch (error: unknown) {
-      console.error('Failed to delete document:', error);
-      setDeleteDocumentError('删除笔记失败，请稍后重试。');
+      console.error('Failed to delete note:', error);
+      setDeleteNoteRequest((previous) => ({
+        ...previous,
+        error: '删除笔记失败，请稍后重试。',
+      }));
     } finally {
-      setDeletingDocumentId(null);
+      setDeleteNoteRequest((previous) => ({
+        ...previous,
+        loading: false,
+        id: null,
+      }));
     }
   };
 
@@ -321,8 +390,11 @@ const Component: FC = () => {
       return;
     }
 
-    setDeletingKnowledgeBaseId(knowledgeBase.id);
-    setDeleteKnowledgeBaseError('');
+    setDeleteKnowledgeBaseRequest({
+      loading: true,
+      error: '',
+      id: knowledgeBase.id,
+    });
     try {
       await deleteKnowledgeBase(knowledgeBase.id);
       withCrossFade(() => {
@@ -331,24 +403,31 @@ const Component: FC = () => {
         );
         if (selectedKnowledgeBaseId === knowledgeBase.id) {
           setSelectedKnowledgeBaseId(null);
-          setDocuments([]);
+          setNotes([]);
           setPanel({ type: 'empty' });
         }
       });
     } catch (error: unknown) {
       console.error('Failed to delete knowledge base:', error);
-      setDeleteKnowledgeBaseError('删除知识库失败，请稍后重试。');
+      setDeleteKnowledgeBaseRequest((previous) => ({
+        ...previous,
+        error: '删除知识库失败，请稍后重试。',
+      }));
     } finally {
-      setDeletingKnowledgeBaseId(null);
+      setDeleteKnowledgeBaseRequest((previous) => ({
+        ...previous,
+        loading: false,
+        id: null,
+      }));
     }
   };
 
   const selectedKnowledgeBase = knowledgeBases.find(
     (knowledgeBase) => knowledgeBase.id === selectedKnowledgeBaseId,
   );
-  const selectedDocument =
+  const selectedNote =
     panel.type === 'detail' || panel.type === 'edit'
-      ? documents.find((document) => document.id === panel.documentId)
+      ? notes.find((note) => note.id === panel.noteId)
       : undefined;
 
   return (
@@ -367,41 +446,47 @@ const Component: FC = () => {
         <KnowledgeBaseSidebar
           knowledgeBases={knowledgeBases}
           selectedKnowledgeBase={selectedKnowledgeBase}
-          documents={documents}
-          selectedDocumentId={
+          notes={notes}
+          selectedNoteId={
             panel.type === 'detail' || panel.type === 'edit'
-              ? panel.documentId
+              ? panel.noteId
               : null
           }
-          loadingKnowledgeBases={loadingKnowledgeBases}
-          knowledgeBasesError={knowledgeBasesError}
-          loadingDocuments={loadingDocuments}
-          documentsError={documentsError}
+          knowledgeBasesRequest={knowledgeBasesRequest}
+          notesRequest={notesRequest}
           newKnowledgeBaseTitle={newKnowledgeBaseTitle}
-          creatingKnowledgeBase={creatingKnowledgeBase}
-          createKnowledgeBaseError={createKnowledgeBaseError}
-          deletingKnowledgeBaseId={deletingKnowledgeBaseId}
-          deleteKnowledgeBaseError={deleteKnowledgeBaseError}
+          createKnowledgeBaseRequest={createKnowledgeBaseRequest}
+          deleteKnowledgeBaseRequest={deleteKnowledgeBaseRequest}
+          knowledgeBaseSearchText={knowledgeBaseSearchText}
+          noteSearchText={noteSearchText}
+          knowledgeBaseSearchActive={submittedKnowledgeBaseSearchText !== ''}
           onKnowledgeBaseTitleChange={setNewKnowledgeBaseTitle}
           onCreateKnowledgeBase={handleCreateKnowledgeBase}
           onSelectKnowledgeBase={handleSelectKnowledgeBase}
           onBackToKnowledgeBases={handleBackToKnowledgeBases}
-          onSelectDocument={handleSelectDocument}
-          onAddDocument={() => {
+          onSelectNote={handleSelectNote}
+          onAddNote={() => {
             withCrossFade(() => {
-              setSaveDocumentError('');
+              setSaveNoteRequest((previous) => ({
+                ...previous,
+                error: '',
+              }));
               setPanel({ type: 'create' });
             });
           }}
           onDeleteKnowledgeBase={handleDeleteKnowledgeBase}
+          onKnowledgeBaseSearchTextChange={setKnowledgeBaseSearchText}
+          onNoteSearchTextChange={setNoteSearchText}
+          onKnowledgeBaseSearch={handleKnowledgeBaseSearch}
+          onNoteSearch={handleNoteSearch}
         />
 
         <section className="knowledge-base-workspace">
-          {loadingDocuments ? (
+          {notesRequest.loading ? (
             <div className="kb-empty-state">正在加载笔记...</div>
-          ) : documentsError ? (
+          ) : notesRequest.error ? (
             <div className="kb-empty-state kb-message-error" role="alert">
-              {documentsError}
+              {notesRequest.error}
             </div>
           ) : !selectedKnowledgeBase ? (
             <div className="kb-workspace-empty is-base">
@@ -409,53 +494,64 @@ const Component: FC = () => {
               <p>从左侧选择知识库，再选择一篇笔记查看全文。</p>
             </div>
           ) : panel.type === 'create' ? (
-            <DocumentForm
+            <NoteForm
               key={`create-${selectedKnowledgeBase.id}`}
               mode="create"
-              saving={savingDocument}
-              error={saveDocumentError}
-              onSubmit={handleCreateDocument}
+              saving={saveNoteRequest.loading}
+              error={saveNoteRequest.error}
+              withCrossFade={withCrossFade}
+              onSubmit={handleCreateNote}
               onCancel={() => {
                 withCrossFade(() => {
-                  setSaveDocumentError('');
+                  setSaveNoteRequest((previous) => ({
+                    ...previous,
+                    error: '',
+                  }));
                   setPanel({ type: 'empty' });
                 });
               }}
             />
-          ) : panel.type === 'edit' && selectedDocument ? (
-            <DocumentForm
-              key={`edit-${selectedDocument.id}`}
+          ) : panel.type === 'edit' && selectedNote ? (
+            <NoteForm
+              key={`edit-${selectedNote.id}`}
               mode="edit"
-              document={selectedDocument}
-              saving={savingDocument}
-              error={saveDocumentError}
+              note={selectedNote}
+              saving={saveNoteRequest.loading}
+              error={saveNoteRequest.error}
+              withCrossFade={withCrossFade}
               onSubmit={(title, content) =>
-                handleUpdateDocument(selectedDocument.id, title, content)
+                handleUpdateNote(selectedNote.id, title, content)
               }
               onCancel={() => {
                 withCrossFade(() => {
-                  setSaveDocumentError('');
-                  setPanel({ type: 'detail', documentId: selectedDocument.id });
+                  setSaveNoteRequest((previous) => ({
+                    ...previous,
+                    error: '',
+                  }));
+                  setPanel({ type: 'detail', noteId: selectedNote.id });
                 });
               }}
             />
-          ) : panel.type === 'detail' && selectedDocument ? (
-            <DocumentDetail
-              key={selectedDocument.id}
+          ) : panel.type === 'detail' && selectedNote ? (
+            <NoteDetail
+              key={selectedNote.id}
               knowledgeBase={selectedKnowledgeBase}
-              document={selectedDocument}
-              deleting={deletingDocumentId === selectedDocument.id}
-              deleteError={deleteDocumentError}
+              note={selectedNote}
+              deleting={deleteNoteRequest.id === selectedNote.id}
+              deleteError={deleteNoteRequest.error}
               onEdit={() => {
                 withCrossFade(() => {
-                  setSaveDocumentError('');
+                  setSaveNoteRequest((previous) => ({
+                    ...previous,
+                    error: '',
+                  }));
                   setPanel({
                     type: 'edit',
-                    documentId: selectedDocument.id,
+                    noteId: selectedNote.id,
                   });
                 });
               }}
-              onDelete={() => handleDeleteDocument(selectedDocument)}
+              onDelete={() => handleDeleteNote(selectedNote)}
             />
           ) : (
             <div className="kb-workspace-empty">

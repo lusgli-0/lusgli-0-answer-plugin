@@ -2,14 +2,14 @@
 $baseUrl = "http://localhost:9080"
 $token = ""
 $kbId = "1"
-$docId = "1"
+$noteId = "1"
 
 $headers = @{ Authorization = "Bearer $token" }
-$uri = "$($baseUrl.TrimEnd('/'))/answer/admin/api/knowledge-base/$kbId/documents/$docId"
+$uri = "$($baseUrl.TrimEnd('/'))/answer/admin/api/knowledge-base/$kbId/notes/$noteId"
 
 Write-Host "请求地址：$uri"
 
-$json = '{"title":"\u66f4\u65b0\u540e\u7684\u6807\u9898","content":"\u8fd9\u662f\u66f4\u65b0\u540e\u7684\u6587\u6863\u5185\u5bb9\u3002"}'
+$json = '{"title":"\u66f4\u65b0\u540e\u7684\u6807\u9898","content":"\u8fd9\u662f\u66f4\u65b0\u540e\u7684\u7b14\u8bb0\u5185\u5bb9\u3002"}'
 $body = [System.Text.Encoding]::UTF8.GetBytes($json)
 
 Invoke-RestMethod -Method Put `
@@ -20,7 +20,7 @@ Invoke-RestMethod -Method Put `
 
 curl.exe -H "Authorization: Bearer 你的管理员Token" "你的站点地址/answer/admin/api/knowledge-base/health"
 
-$json = '{"title":"\u4ea7\u54c1\u6587\u6863"}'
+$json = '{"title":"\u4ea7\u54c1\u7b14\u8bb0"}'
 $body = [System.Text.Encoding]::UTF8.GetBytes($json)
 
 Invoke-RestMethod -Method Post `
@@ -28,6 +28,12 @@ Invoke-RestMethod -Method Post `
   -Headers $headers `
   -ContentType "application/json; charset=utf-8" `
   -Body $body
+```
+
+升级已有数据库时，请先手动将笔记表 `kb_document` 重命名为 `kb_note`：
+
+```sql
+RENAME TABLE kb_document TO kb_note;
 ```
 
 ### 在知识库中添加文本
@@ -40,11 +46,11 @@ $json = '{"title":"\u4ea7\u54c1\u6587\u6863","content":"\u8fd9\u662f\u77e5\u8bc6
 $body = [System.Text.Encoding]::UTF8.GetBytes($json)
 
 Invoke-RestMethod -Method Post `
-  -Uri "$baseUrl/answer/admin/api/knowledge-base/$knowledgeBaseId/documents" `
+  -Uri "$baseUrl/answer/admin/api/knowledge-base/$knowledgeBaseId/notes" `
   -Headers $headers `
   -ContentType "application/json; charset=utf-8" `
   -Body $body
 
-  curl.exe -i "$base/knowledge-base/$knowledgeBaseId/documents" `
+  curl.exe -i "$base/knowledge-base/$knowledgeBaseId/notes" `
   -H "Authorization: Bearer $token"
 ```

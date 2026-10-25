@@ -5,7 +5,7 @@ export type KnowledgeBase = {
   updated_at?: string;
 };
 
-export type KnowledgeBaseDocument = {
+export type KnowledgeBaseNote = {
   id: number;
   knowledge_base_id: number;
   title: string;
@@ -21,12 +21,17 @@ export type KnowledgeBaseListResponse = {
   };
 };
 
-export type DocumentListResponse = {
-  items: KnowledgeBaseDocument[];
+export type NoteListResponse = {
+  items: KnowledgeBaseNote[];
 };
 
-export type DocumentPanel =
+export type NotePanel =
   | { type: 'empty' }
-  | { type: 'detail'; documentId: number }
+  | { type: 'detail'; noteId: number }
   | { type: 'create' }
-  | { type: 'edit'; documentId: number };
+  | { type: 'edit'; noteId: number };
+
+export type RequestState = {
+  loading: boolean;
+  error: string;
+};

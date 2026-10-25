@@ -1,10 +1,10 @@
 import { LOGGED_TOKEN_STORAGE_KEY } from '@/common/constants';
 
 import type {
-  DocumentListResponse,
   KnowledgeBase,
-  KnowledgeBaseDocument,
   KnowledgeBaseListResponse,
+  KnowledgeBaseNote,
+  NoteListResponse,
 } from './types';
 
 const KNOWLEDGE_BASE_API = '/answer/api/v1/knowledge-base';
@@ -30,8 +30,16 @@ async function requestJSON<T>(
   return (await response.json()) as T;
 }
 
-export function listKnowledgeBases(): Promise<KnowledgeBaseListResponse> {
-  return requestJSON(KNOWLEDGE_BASE_API);
+export function listKnowledgeBases(
+  q = '',
+): Promise<KnowledgeBaseListResponse> {
+  const params = new URLSearchParams();
+  if (q.trim()) {
+    params.set('q', q.trim());
+  }
+
+  const query = params.toString();
+  return requestJSON(`${KNOWLEDGE_BASE_API}${query ? `?${query}` : ''}`);
 }
 
 export function createKnowledgeBase(title: string): Promise<KnowledgeBase> {
@@ -48,19 +56,29 @@ export function deleteKnowledgeBase(id: number): Promise<{ message: string }> {
   });
 }
 
-export function listDocuments(
+export function listNotes(
   knowledgeBaseId: number,
-): Promise<DocumentListResponse> {
-  return requestJSON(`${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/documents`);
+  q = '',
+): Promise<NoteListResponse> {
+  const params = new URLSearchParams();
+  if (q.trim()) {
+    params.set('q', q.trim());
+  }
+
+  const query = params.toString();
+  const url = `${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/notes${
+    query ? `?${query}` : ''
+  }`;
+  return requestJSON(url);
 }
 
-export function createDocument(
+export function createNote(
   knowledgeBaseId: number,
   title: string,
   content: string,
-): Promise<KnowledgeBaseDocument> {
+): Promise<KnowledgeBaseNote> {
   return requestJSON(
-    `${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/documents`,
+    `${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/notes`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,14 +87,14 @@ export function createDocument(
   );
 }
 
-export function updateDocument(
+export function updateNote(
   knowledgeBaseId: number,
-  documentId: number,
+  noteId: number,
   title: string,
   content: string,
-): Promise<KnowledgeBaseDocument> {
+): Promise<KnowledgeBaseNote> {
   return requestJSON(
-    `${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/documents/${documentId}`,
+    `${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/notes/${noteId}`,
     {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -85,12 +103,29 @@ export function updateDocument(
   );
 }
 
-export function deleteDocument(
+export function deleteNote(
   knowledgeBaseId: number,
-  documentId: number,
+  noteId: number,
 ): Promise<{ message: string }> {
   return requestJSON(
-    `${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/documents/${documentId}`,
+    `${KNOWLEDGE_BASE_API}/${knowledgeBaseId}/notes/${noteId}`,
     { method: 'DELETE' },
   );
+}
+
+export async function renderMarkdown(content: string): Promise<string> {
+  const response = await requestJSON<{ data: string }>(
+    '/answer/api/v1/post/render',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    },
+  );
+
+  if (typeof response.data !== 'string') {
+    throw new Error('Invalid markdown render response');
+  }
+
+  return response.data;
 }

@@ -20,11 +20,15 @@
 package i18n
 
 const (
-	InfoName        = "plugin.knowledge_base.backend.info.name"
-	InfoDescription = "plugin.knowledge_base.backend.info.description"
-	InfoHost        = "plugin.knowledge_base.backend.config.host"
-	InfoPort        = "plugin.knowledge_base.backend.config.port"
-	InfoDatabase    = "plugin.knowledge_base.backend.config.database"
-	InfoUsername    = "plugin.knowledge_base.backend.config.username"
-	InfoPassword    = "plugin.knowledge_base.backend.config.password"
+	InfoName                = "plugin.knowledge_base.backend.info.name"
+	InfoDescription         = "plugin.knowledge_base.backend.info.description"
+	InfoHost                = "plugin.knowledge_base.backend.config.host"
+	InfoPort                = "plugin.knowledge_base.backend.config.port"
+	InfoDatabase            = "plugin.knowledge_base.backend.config.database"
+	InfoUsername            = "plugin.knowledge_base.backend.config.username"
+	InfoPassword            = "plugin.knowledge_base.backend.config.password"
+	InfoHostPlaceholder     = "plugin.knowledge_base.backend.config.host_placeholder"
+	InfoPortPlaceholder     = "plugin.knowledge_base.backend.config.port_placeholder"
+	InfoDatabasePlaceholder = "plugin.knowledge_base.backend.config.database_placeholder"
+	InfoUsernamePlaceholder = "plugin.knowledge_base.backend.config.username_placeholder"
 )
